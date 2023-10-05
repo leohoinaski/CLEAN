@@ -64,8 +64,9 @@ def plotCLEANvsREF(merge):
     ax2 = ax[0].twinx()
     ax2.plot(merge['timeseries'])
     
-    ax[1].scatter(merge['timeseries'],merge['ref'],color='gray',
-                  s=1, alpha=0.5,edgecolors='gray')
+    ax[1].scatter(merge['timeseries'][merge['ref']>0],
+                  merge['ref'][merge['ref']>0],
+                  color='gray',s=1, alpha=0.5,edgecolors='gray')
     
 
 
@@ -85,4 +86,4 @@ def plotCLEANvsREF(merge):
     #     gtsa.plot_pacf(data_filled, lags=len(windows[ii])/50,  method="ywm",
     #                  title='',ax = ax[ii])
 
-    return stat
+    return fig

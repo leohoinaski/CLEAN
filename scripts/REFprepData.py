@@ -9,7 +9,7 @@ Created on Wed Sep 20 11:38:21 2023
 import pandas as pd
 import os
 import numpy as np
-import CLEANprepData
+
 
 def openRefMonitor(folder_path,pollutant):
     """
@@ -38,6 +38,7 @@ def openRefMonitor(folder_path,pollutant):
     monitors = []
     for file_name in file_list:
         if file_name.startswith('ref_'+pollutant):
+            print(file_name) 
             mon = pd.read_csv(folder_path+'/'+file_name)
             idx = pd.DatetimeIndex(mon['DateTime'])
             mon.set_index(idx, inplace=True)
@@ -61,15 +62,8 @@ def refFixDatetime(refData):
     return refData
     
 
-Reffolder_path = '/media/leohoinaski/HDD/CLEAN_Calibration/data/ref/diamante'
-CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
-
-pollutant='CO'
-refData = openRefMonitor(Reffolder_path,pollutant)
-refData = refFixDatetime(refData)
-
-
-cleanData = CLEANprepData.mainCLEANprepData(CLEANfolder_path,pollutant)
-
-merge=pd.merge(cleanData,refData, how='inner', left_index=True, right_index=True)
-
+def mainREFprepData(Reffolder_path,pollutant):
+    refData = openRefMonitor(Reffolder_path,pollutant)
+    refData = refFixDatetime(refData)
+    refData['ref'][refData['ref']<0]=np.nan
+    return refData

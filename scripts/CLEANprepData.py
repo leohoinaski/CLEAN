@@ -53,6 +53,7 @@ def openMonitor(folder_path,pollutant):
     monitors = []
     for file_name in file_list:
         if file_name.startswith('CLEAN_'+pollutant):
+            print(file_name) 
             mon = pd.read_csv(folder_path+'/'+file_name)
             idx = pd.DatetimeIndex(mon['DateTime'])
             mon.set_index(idx, inplace=True)
@@ -165,7 +166,7 @@ def selectWindow(ave15min,nSensor,nNaN):
     dateTimeWin=[]
     for ii,win in enumerate(windows):
         if len(win)>5*24:
-            print('OK timeWindow')
+            #print('OK timeWindow')
             if np.isnan(win).all()==False:
                 dataWin.append(win)
                 dateTimeWin.append(timeWindows[ii])
@@ -288,41 +289,75 @@ def getPeaks(ts):
        
     return peaks
 
-def multi2unimodal(dataWin,dateTimeWin):
-    # Geting local information
-    bestSignal,allPeaks,bestPeak = bestWindow(dataWin,dateTimeWin)
-    # Standardizing not reference data
-    correctTs=[]
-    correctDt=[]
-    for ii,winD in enumerate(dataWin):
-        winD = np.array(winD)
-        for jj in range(0,allPeaks[ii].shape[0]):
-            lowLocal = allPeaks[ii]['means'][jj]-5*allPeaks[ii]['stds'][jj]
-            upLocal = allPeaks[ii]['means'][jj]+5*allPeaks[ii]['stds'][jj]
-            print(str(lowLocal)+' - '+ str(upLocal))
-            # winD[(winD>lowLocal) & (winD<upLocal)] = \
-            #     (winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj]
-            correctTs.append((winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj])   
-            correctDt.append(pd.DataFrame(np.array(dateTimeWin[ii])[(winD>lowLocal) & (winD<upLocal)]))
+def multi2unimodal(dataWin,dateTimeWin,op):
+    if op=='fix':
+        # Geting local information
+        bestSignal,allPeaks,bestPeak = bestWindow(dataWin,dateTimeWin)
+        # Standardizing not reference data
+        correctTs=[]
+        correctDt=[]
+        for ii,winD in enumerate(dataWin):
+            winD = np.array(winD)
+            for jj in range(0,allPeaks[ii].shape[0]):
+                lowLocal = allPeaks[ii]['means'][jj]-5*allPeaks[ii]['stds'][jj]
+                upLocal = allPeaks[ii]['means'][jj]+5*allPeaks[ii]['stds'][jj]
+                #print(str(lowLocal)+' - '+ str(upLocal))
+                # winD[(winD>lowLocal) & (winD<upLocal)] = \
+                #     (winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj]
+                correctTs.append((winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj])   
+                correctDt.append(pd.DataFrame(np.array(dateTimeWin[ii])[(winD>lowLocal) & (winD<upLocal)]))
+            
+        # Correcting using best signal as reference
+        stdData=[]
+        for ii,cts in enumerate(correctTs):
+            cts = np.array(cts)
+            
+            cts = (cts + bestPeak['means'][np.argmax(bestPeak['weights'])])*bestPeak['stds'][np.argmax(bestPeak['weights'])]
+            stdData.append(pd.DataFrame(cts))
+            
+        stdData= pd.concat(stdData)
+        stdData.columns=['timeseries']
+        correctDt= pd.concat(correctDt)
         
-    # Correcting using best signal as reference
-    stdData=[]
-    for ii,cts in enumerate(correctTs):
-        cts = np.array(cts)
+        stdData['datetime'] = np.array(correctDt)
+        stdData = stdData.set_index('datetime')
+        stdData = stdData.drop_duplicates()
+        stdData = stdData.sort_index()
+        stdData['datetime'] = stdData.index
+        ave60min = stdData.resample(rule='60Min', on='datetime').mean()
+    else:
+        # Geting local information
+        bestSignal,allPeaks,bestPeak = bestWindow(dataWin,dateTimeWin)
+        # Standardizing not reference data
+        correctTs=[]
+        correctDt=[]
+        for ii,winD in enumerate(dataWin):
+            winD = np.array(winD)
+            for jj in range(0,allPeaks[ii].shape[0]):
+                lowLocal = allPeaks[ii]['means'][jj]-5*allPeaks[ii]['stds'][jj]
+                upLocal = allPeaks[ii]['means'][jj]+5*allPeaks[ii]['stds'][jj]
+                #print(str(lowLocal)+' - '+ str(upLocal))
+                # winD[(winD>lowLocal) & (winD<upLocal)] = \
+                #     (winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj]
+                correctTs.append(winD)   
+                correctDt.append(pd.DataFrame(dateTimeWin[ii]))
+            
+        # Correcting using best signal as reference
+        stdData=[]
+        for ii,cts in enumerate(correctTs):
+            cts = np.array(cts)
+            stdData.append(pd.DataFrame(cts))
+            
+        stdData= pd.concat(stdData)
+        stdData.columns=['timeseries']
+        correctDt= pd.concat(correctDt)
         
-        cts = (cts + bestPeak['means'][np.argmax(bestPeak['weights'])])*bestPeak['stds'][np.argmax(bestPeak['weights'])]
-        stdData.append(pd.DataFrame(cts))
-        
-    stdData= pd.concat(stdData)
-    stdData.columns=['timeseries']
-    correctDt= pd.concat(correctDt)
-    
-    stdData['datetime'] = np.array(correctDt)
-    stdData = stdData.set_index('datetime')
-    stdData = stdData.drop_duplicates()
-    stdData = stdData.sort_index()
-    stdData['datetime'] = stdData.index
-    ave60min = stdData.resample(rule='60Min', on='datetime').mean()
+        stdData['datetime'] = np.array(correctDt)
+        stdData = stdData.set_index('datetime')
+        stdData = stdData.drop_duplicates()
+        stdData = stdData.sort_index()
+        stdData['datetime'] = stdData.index
+        ave60min = stdData.resample(rule='60Min', on='datetime').mean()
 
     return stdData,bestSignal,allPeaks,bestPeak,ave60min
 
@@ -437,17 +472,18 @@ def modelFit(windows,dateTimeWin):
 folder_path = '/media/leohoinaski/HDD/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
 #folder_path = '/mnt/sdb1/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
 #folder_path="C:/Users/Leonardo.Hoinaski/Documents/CLEAN_Calibration/scripts/data/2.input_equipo/dados_brutos"
-def mainCLEANprepData(folder_path,pollutant):
+def mainCLEANprepData(folder_path,pollutant,op):
     monitors = openMonitor(folder_path,pollutant)
     ave5min,ave15min, gaps = averages (monitors)
     dataWin,dateTimeWin = selectWindow(ave15min,1,1000)
     fixDataWin,limits = fixWindow(dataWin,dateTimeWin,75)
     #stat = plotWindows(fixDataWin,dateTimeWin)
-    stdData,bestSignal,allPeaks,bestPeak,ave60min = multi2unimodal(fixDataWin,dateTimeWin)
+    stdData,bestSignal,allPeaks,bestPeak,ave60min = multi2unimodal(fixDataWin,dateTimeWin,op)
     #stat = plotWindows(stdData.timeseries,stdData.index)
     #ave60min.plot()
     #checkModel,model_fit,yhat_conf_int = modelFit(dataWin,dateTimeWin)
     return ave60min
+
 
 # https://timeseriesreasoning.com/contents/correlation/
 # https://www.iese.fraunhofer.de/blog/change-point-detection/
