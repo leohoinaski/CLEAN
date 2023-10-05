@@ -16,18 +16,28 @@ def statistics(merge):
     
     stats = pd.DataFrame(dict(rho=[], rho_pval=[]), dtype=float)
     stats= stats.append(dict(rho=rho, rho_pval=rho_pval), ignore_index=True)
-    corr = [weighted_bootstrap_corr(merge,'ref','timeseries')  for i in range(201)]
+    bestSample=[]
+    corri = -2
+    corr=[]
+    for ii in range(0,201):
+        cr,sample = weighted_bootstrap_corr(merge,'ref','timeseries') 
+        if cr>corri:
+            corri=cr
+            bestSample=sample
+        corr.append(cr)
+    print('Best correlation = '+str(corri))
     table = summarize(corr, digits=3)
-    return stats, table
+    return stats, table, bestSample
 
 def weighted_bootstrap_corr(df, var1, var2):
-    n = len(df)
+    n = int(len(df)*0.3)
     sample = df.sample(n=n, replace=True, weights='ref')
     rho, rho_pval = scipy.stats.spearmanr(sample[var1],
                  sample[var2], axis=0, nan_policy='omit')
     
-    corr = sample[var1].corr(sample[var2])
-    return rho
+    #corr = sample[var1].corr(sample[var2])
+    
+    return rho, sample
 
 
 def summarize(t, digits=2):

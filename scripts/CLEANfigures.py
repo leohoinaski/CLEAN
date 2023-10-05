@@ -68,6 +68,12 @@ def plotCLEANvsREF(merge):
                   merge['ref'][merge['ref']>0],
                   color='gray',s=1, alpha=0.5,edgecolors='gray')
     
+def scatterCLEANvsREF(merge):
+
+    fig, ax = plt.subplots()
+    ax.scatter(merge['timeseries'][merge['ref']>0],
+                  merge['ref'][merge['ref']>0],
+                  color='gray',s=1, alpha=0.5,edgecolors='gray')
 
 
     # fig, ax = plt.subplots(winLen)

@@ -11,19 +11,23 @@ import CLEANstats
 import CLEANfigures
 import pandas as pd
 
+
 Reffolder_path = '/media/leohoinaski/HDD/CLEAN/data/ref/diamante'
 CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN/data/2.input_equipo/dados_brutos'
 
-pollutant='CO'
+pollutants=['O3','CO','NO2','SO2']
 
-refData = REFprepData.mainREFprepData(Reffolder_path,pollutant)
-
-cleanData = CLEANprepData.mainCLEANprepData(CLEANfolder_path,pollutant,'raw')
-
-merge=pd.merge(cleanData,refData, how='inner', left_index=True, right_index=True)
-
-stats,table = CLEANstats.statistics(merge)
-
-#CLEANfigures.plotCLEANvsREF(merge)
-
-print(table)
+for pollutant in pollutants:
+    refData = REFprepData.mainREFprepData(Reffolder_path,pollutant)
+    
+    cleanData = CLEANprepData.mainCLEANprepData(CLEANfolder_path,pollutant,'fix')
+    
+    merge=pd.merge(cleanData,refData, how='inner', left_index=True, right_index=True)
+    
+    stats,table,bestSample = CLEANstats.statistics(merge)
+    
+    CLEANfigures.scatterCLEANvsREF(bestSample)
+    
+    #CLEANfigures.plotCLEANvsREF(merge)
+    
+    print(table)
