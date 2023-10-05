@@ -325,6 +325,7 @@ def multi2unimodal(dataWin,dateTimeWin,op):
         stdData = stdData.sort_index()
         stdData['datetime'] = stdData.index
         ave60min = stdData.resample(rule='60Min', on='datetime').mean()
+    
     else:
         # Geting local information
         bestSignal,allPeaks,bestPeak = bestWindow(dataWin,dateTimeWin)
@@ -465,6 +466,74 @@ def modelFit(windows,dateTimeWin):
 
 
 
+def multi2unimodalBootstrap(dataWin,dateTimeWin,bestSample):      
+    hist, bin_edges = np.histogram(bestSample['timeseries'].dropna().values)
+    # Geting local information
+    x_grid = np.linspace(bin_edges.min(), bin_edges.max(), 1000)
+    silverman_bandwidth = bw_silverman(bestSample['timeseries'].dropna().values)
+    pdf = kde_sklearn(np.array(bestSample['timeseries'].dropna()),x_grid, bandwidth=silverman_bandwidth)
+    # Geting peaks
+    idx = getExtremePoints(pdf, typeOfExtreme = 'max', maxPoints = None)
+    # Decomposing pdfs
+    gmm = GaussianMixture(n_components=idx.shape[0])
+    gmm.fit(np.array(bestSample['timeseries'].dropna()).reshape(-1, 1))
+    means = gmm.means_
+    # Conver covariance into Standard Deviation
+    standard_deviations = gmm.covariances_.reshape(-1,1)**0.5  
+    # Useful when plotting the distributions later
+    weights = gmm.weights_  
+    bestPeak = pd.DataFrame()
+    bestPeak['means'] = pd.DataFrame(means)
+    bestPeak['stds'] = standard_deviations
+    bestPeak['weights'] = pd.DataFrame(weights)
+    
+    winLen = len(dataWin)
+    allPeaks=[]
+    for ii in range(0,winLen):
+        ts = pd.DataFrame()
+        ts['timeseries'] = dataWin[ii]
+        ts['datetime'] = dateTimeWin[ii]
+        ts = ts.set_index(pd.DatetimeIndex(ts['datetime']))
+        ts = ts.dropna()
+        peaksRaw = getPeaks(ts)
+        allPeaks.append(peaksRaw)
+        
+    correctTs=[]
+    correctDt=[]
+    for ii,winD in enumerate(dataWin):
+        winD = np.array(winD)
+        for jj in range(0,allPeaks[ii].shape[0]):
+            lowLocal = allPeaks[ii]['means'][jj]-5*allPeaks[ii]['stds'][jj]
+            upLocal = allPeaks[ii]['means'][jj]+5*allPeaks[ii]['stds'][jj]
+            #print(str(lowLocal)+' - '+ str(upLocal))
+            # winD[(winD>lowLocal) & (winD<upLocal)] = \
+            #     (winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj]
+            correctTs.append((winD[(winD>lowLocal) & (winD<upLocal)]- allPeaks[ii]['means'][jj])/allPeaks[ii]['stds'][jj])   
+            correctDt.append(pd.DataFrame(np.array(dateTimeWin[ii])[(winD>lowLocal) & (winD<upLocal)]))
+        
+    # Correcting using best signal as reference
+    stdData=[]
+    for ii,cts in enumerate(correctTs):
+        cts = np.array(cts)
+        
+        cts = (cts + bestPeak['means'][np.argmax(bestPeak['weights'])])*bestPeak['stds'][np.argmax(bestPeak['weights'])]
+        stdData.append(pd.DataFrame(cts))
+        
+    stdData= pd.concat(stdData)
+    stdData.columns=['timeseries']
+    correctDt= pd.concat(correctDt)
+    
+    stdData['datetime'] = np.array(correctDt)
+    stdData = stdData.set_index('datetime')
+    stdData = stdData.drop_duplicates()
+    stdData = stdData.sort_index()
+    stdData['datetime'] = stdData.index
+    ave60min = stdData.resample(rule='60Min', on='datetime').mean()
+        
+    return bestPeak, ave60min
+
+
+
 #folder_path = r'C:\Users\rafab\OneDrive\Documentos\CLEAN_Calibration\data\data_clean\dados_brutos'
 #folder_path = '/mnt/sdb1/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
 
@@ -484,6 +553,14 @@ def mainCLEANprepData(folder_path,pollutant,op):
     #checkModel,model_fit,yhat_conf_int = modelFit(dataWin,dateTimeWin)
     return ave60min
 
+
+def mainCLEANprepDataBootstrap(folder_path,pollutant,bestSample):
+    monitors = openMonitor(folder_path,pollutant)
+    ave5min,ave15min, gaps = averages (monitors)
+    dataWin,dateTimeWin = selectWindow(ave15min,1,1000)
+    fixDataWin,limits = fixWindow(dataWin,dateTimeWin,75)
+    peaks,cleanDataboots = multi2unimodalBootstrap(fixDataWin,dateTimeWin,bestSample)
+    return cleanDataboots
 
 # https://timeseriesreasoning.com/contents/correlation/
 # https://www.iese.fraunhofer.de/blog/change-point-detection/

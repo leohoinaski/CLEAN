@@ -16,6 +16,7 @@ Reffolder_path = '/media/leohoinaski/HDD/CLEAN/data/ref/diamante'
 CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN/data/2.input_equipo/dados_brutos'
 
 pollutants=['O3','CO','NO2','SO2']
+samplePerctg=0.5
 
 for pollutant in pollutants:
     refData = REFprepData.mainREFprepData(Reffolder_path,pollutant)
@@ -24,10 +25,16 @@ for pollutant in pollutants:
     
     merge=pd.merge(cleanData,refData, how='inner', left_index=True, right_index=True)
     
-    stats,table,bestSample = CLEANstats.statistics(merge)
+    stats,table,bestSample = CLEANstats.statistics(merge,samplePerctg)
     
-    CLEANfigures.scatterCLEANvsREF(bestSample)
+    #CLEANfigures.scatterCLEANvsREF(bestSample)
     
-    #CLEANfigures.plotCLEANvsREF(merge)
+    cleanDataboots = CLEANprepData.mainCLEANprepDataBootstrap(CLEANfolder_path,pollutant,bestSample)
+
+    merge=pd.merge(cleanDataboots,refData, how='inner', left_index=True, right_index=True)
+    
+    stats,table,bestSample = CLEANstats.statistics(merge,samplePerctg)
+    
+    CLEANfigures.plotCLEANvsREF(bestSample,pollutant)
     
     print(table)

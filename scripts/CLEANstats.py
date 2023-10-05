@@ -10,27 +10,29 @@ import scipy
 import pandas as pd
 import numpy as np
 
-def statistics(merge):
-    rho, rho_pval = scipy.stats.spearmanr(merge['timeseries'],
-                 merge['ref'], axis=0, nan_policy='omit')
-    
-    stats = pd.DataFrame(dict(rho=[], rho_pval=[]), dtype=float)
-    stats= stats.append(dict(rho=rho, rho_pval=rho_pval), ignore_index=True)
+def statistics(merge,samplePerctg):
+
     bestSample=[]
     corri = -2
     corr=[]
-    for ii in range(0,201):
-        cr,sample = weighted_bootstrap_corr(merge,'ref','timeseries') 
+    for ii in range(0,500):
+        cr,sample = weighted_bootstrap_corr(merge,'ref','timeseries',samplePerctg) 
         if cr>corri:
             corri=cr
             bestSample=sample
         corr.append(cr)
     print('Best correlation = '+str(corri))
     table = summarize(corr, digits=3)
+    rho, rho_pval = scipy.stats.spearmanr(bestSample['timeseries'],
+                 bestSample['ref'], axis=0, nan_policy='omit')
+    
+    stats = pd.DataFrame(dict(rho=[], rho_pval=[]), dtype=float)
+    stats= stats.append(dict(rho=rho, rho_pval=rho_pval), ignore_index=True)
+    
     return stats, table, bestSample
 
-def weighted_bootstrap_corr(df, var1, var2):
-    n = int(len(df)*0.3)
+def weighted_bootstrap_corr(df, var1, var2, samplePerctg):
+    n = int(len(df)*samplePerctg)
     sample = df.sample(n=n, replace=True, weights='ref')
     rho, rho_pval = scipy.stats.spearmanr(sample[var1],
                  sample[var2], axis=0, nan_policy='omit')

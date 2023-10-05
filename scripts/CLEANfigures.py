@@ -56,17 +56,20 @@ def plotWindows(windows,timeWindows):
     return stat
 
 
-def plotCLEANvsREF(merge):
-          
-
+def plotCLEANvsREF(merge,pollutant):
+        
     fig, ax = plt.subplots(2)
-    ax[0].plot(merge['ref'],color='red')
+    ax[0].plot(merge['ref'].sort_index(),color='turquoise',label='Reference')
+    ax[0].set_ylabel(pollutant+' Reference')
     ax2 = ax[0].twinx()
-    ax2.plot(merge['timeseries'])
-    
+    ax2.set_ylabel('CLEAN')
+    ax2.plot(merge['timeseries'].sort_index(),color='royalblue',label='CLEAN')
+    ax[0].legend()
     ax[1].scatter(merge['timeseries'][merge['ref']>0],
                   merge['ref'][merge['ref']>0],
-                  color='gray',s=1, alpha=0.5,edgecolors='gray')
+                  color='gray',s=10, alpha=0.5,edgecolors='gray')
+    ax[1].set_ylabel(pollutant+' Reference')
+    ax[1].set_xlabel('CLEAN')
     
 def scatterCLEANvsREF(merge):
 
