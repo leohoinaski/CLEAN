@@ -45,10 +45,10 @@ for pollutant in pollutants:
     
     cleanDataboots = CLEANprepData.mainCLEANprepDataBootstrap(CLEANfolder_path,pollutant,bestSample)
 
-    merge=pd.merge(cleanDataboots,refData, how='inner', left_index=True, right_index=True)
+    merge2=pd.merge(cleanDataboots,refData, how='inner', left_index=True, right_index=True)
     
-    stats,table,bestSample = CLEANstats.statistics(merge,samplePerctg,nIteration)
+    stats,table,bestSample2 = CLEANstats.statistics(merge2,samplePerctg,nIteration)
     
-    CLEANfigures.plotCLEANvsREF(bestSample,pollutant)
+    CLEANfigures.plotCLEANvsREF(bestSample2,pollutant)
     
     print(table)
