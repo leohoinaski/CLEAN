@@ -78,6 +78,15 @@ def scatterCLEANvsREF(merge):
                   merge['ref'][merge['ref']>0],
                   color='gray',s=1, alpha=0.5,edgecolors='gray')
 
+    
+def histCLEANvsREF(merge):
+
+    fig, ax = plt.subplots(2)
+    ax[0].hist(merge['timeseries'].dropna(),
+            color='royalblue', alpha=0.5)
+    ax[1].hist(merge['ref'].dropna(),
+            color='turquoise', alpha=0.5)
+    
 
     # fig, ax = plt.subplots(winLen)
     # for ii in range(0,winLen):

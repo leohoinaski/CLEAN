@@ -10,12 +10,12 @@ import scipy
 import pandas as pd
 import numpy as np
 
-def statistics(merge,samplePerctg):
+def statistics(merge,samplePerctg,nIteration):
 
     bestSample=[]
     corri = -2
     corr=[]
-    for ii in range(0,500):
+    for ii in range(0,nIteration):
         cr,sample = weighted_bootstrap_corr(merge,'ref','timeseries',samplePerctg) 
         if cr>corri:
             corri=cr
@@ -27,7 +27,11 @@ def statistics(merge,samplePerctg):
                  bestSample['ref'], axis=0, nan_policy='omit')
     
     stats = pd.DataFrame(dict(rho=[], rho_pval=[]), dtype=float)
-    stats= stats.append(dict(rho=rho, rho_pval=rho_pval), ignore_index=True)
+    try:
+        stats= stats.append(dict(rho=rho, rho_pval=rho_pval), ignore_index=True)
+    except:
+            stats['rho'] = rho
+            stats['rho_pval'] = rho_pval
     
     return stats, table, bestSample
 

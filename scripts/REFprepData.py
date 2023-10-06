@@ -32,7 +32,7 @@ def openRefMonitor(folder_path,pollutant):
     """
     # Listing files within the folder_path
     file_list = os.listdir(folder_path)
-    print(file_list) 
+    #print(file_list) 
     
     # Appending data in monitors list
     monitors = []

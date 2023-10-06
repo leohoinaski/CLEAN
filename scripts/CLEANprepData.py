@@ -20,7 +20,7 @@ import statsmodels.tsa as tsa
 import statsmodels.api as sm
 from pmdarima.arima import auto_arima
 from sklearn.neighbors import KernelDensity
-from statsmodels.nonparametric.bandwidths import bw_silverman,bw_scott
+from statsmodels.nonparametric.bandwidths import bw_silverman
 from sklearn.mixture import GaussianMixture
 #from scipy.stats import norm
 from CLEANfigures import plotWindows
@@ -47,7 +47,7 @@ def openMonitor(folder_path,pollutant):
     """
     # Listing files within the folder_path
     file_list = os.listdir(folder_path)
-    print(file_list) 
+    #print(file_list) 
     
     # Appending data in monitors list
     monitors = []
@@ -534,19 +534,13 @@ def multi2unimodalBootstrap(dataWin,dateTimeWin,bestSample):
 
 
 
-#folder_path = r'C:\Users\rafab\OneDrive\Documentos\CLEAN_Calibration\data\data_clean\dados_brutos'
-#folder_path = '/mnt/sdb1/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
 
-
-folder_path = '/media/leohoinaski/HDD/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
-#folder_path = '/mnt/sdb1/CLEAN_Calibration/data/2.input_equipo/dados_brutos'
-#folder_path="C:/Users/Leonardo.Hoinaski/Documents/CLEAN_Calibration/scripts/data/2.input_equipo/dados_brutos"
 def mainCLEANprepData(folder_path,pollutant,op):
     monitors = openMonitor(folder_path,pollutant)
     ave5min,ave15min, gaps = averages (monitors)
     dataWin,dateTimeWin = selectWindow(ave15min,1,1000)
     fixDataWin,limits = fixWindow(dataWin,dateTimeWin,75)
-    #stat = plotWindows(fixDataWin,dateTimeWin)
+    stat = plotWindows(fixDataWin,dateTimeWin)
     stdData,bestSignal,allPeaks,bestPeak,ave60min = multi2unimodal(fixDataWin,dateTimeWin,op)
     #stat = plotWindows(stdData.timeseries,stdData.index)
     #ave60min.plot()
