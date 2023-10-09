@@ -540,7 +540,7 @@ def mainCLEANprepData(folder_path,pollutant,op):
     ave5min,ave15min, gaps = averages (monitors)
     dataWin,dateTimeWin = selectWindow(ave15min,1,1000)
     fixDataWin,limits = fixWindow(dataWin,dateTimeWin,75)
-    stat = plotWindows(fixDataWin,dateTimeWin)
+    #stat = plotWindows(fixDataWin,dateTimeWin)
     stdData,bestSignal,allPeaks,bestPeak,ave60min = multi2unimodal(fixDataWin,dateTimeWin,op)
     #stat = plotWindows(stdData.timeseries,stdData.index)
     #ave60min.plot()

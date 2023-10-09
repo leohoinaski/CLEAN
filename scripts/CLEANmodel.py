@@ -10,70 +10,6 @@ import numpy as np
 import os
 
 
-
-def CLEANrandomForest (dataBestModel, pollutant):
-    from sklearn.ensemble import RandomForestRegressor
-    import forestci as fci
-    n_trees = 500
-    
-    cols = dataBestModel.columns.values
-    rcol=[]
-    for col in cols:
-        if col.startswith('ref')==False:
-            rcol.append(col)
-    rcol.append('ref_'+pollutant)
-            
-    bestSample = dataBestModel[rcol]
-    X = np.array(bestSample.dropna()[rcol[:-1]])
-    y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
-    model = RandomForestRegressor(n_estimators=n_trees,max_depth=2, random_state=40).fit(X, y)
-    model.score(X,y)
-
-    
-    # model_ci = fci.random_forest_error(model,
-    #                                    np.array(merge3.dropna().timeseries).reshape(-1, 1),
-    #                                    np.array(merge.dropna().timeseries).reshape(-1, 1))
-
-    return model
-
-def CLEANsvm(dataBestModel, pollutant):
-    from sklearn.pipeline import make_pipeline
-    from sklearn import svm
-    from sklearn.preprocessing import StandardScaler
-    cols = dataBestModel.columns.values
-    rcol=[]
-    for col in cols:
-        if col.startswith('ref')==False:
-            rcol.append(col)
-    rcol.append('ref_'+pollutant)
-            
-    bestSample = dataBestModel[rcol]
-    X = np.array(bestSample.dropna()[rcol[:-1]])
-    y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
-    model = make_pipeline(StandardScaler(), svm.SVC(gamma='auto'))
-    model = svm.SVR()
-    model.fit(X.astype('int'), y)
-    model.score(X.astype('int'),y)
-    
-    return model
-
-def CLEANann(dataBestModel, pollutant):
-    from sklearn.neural_network import MLPRegressor
-    cols = dataBestModel.columns.values
-    rcol=[]
-    for col in cols:
-        if col.startswith('ref')==False:
-            rcol.append(col)
-    rcol.append('ref_'+pollutant)
-            
-    bestSample = dataBestModel[rcol]
-    X = np.array(bestSample.dropna()[rcol[:-1]])
-    y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
-    model = MLPRegressor(random_state=1, max_iter=1000).fit(X, y)
-    model.score(X,y)
-    
-    return model
-
 def CLEANbestModel(dataBestModel,pollutant):
     from sklearn.tree import DecisionTreeRegressor
     from sklearn import linear_model
@@ -106,7 +42,7 @@ def CLEANbestModel(dataBestModel,pollutant):
     bestSample = dataBestModel[rcol]
     X = np.array(bestSample.dropna()[rcol[:-1]])
     y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
-    scorei=0
+    scorei=-100
     models=[]
     for item in classifiers:
         #print(item)
@@ -124,6 +60,7 @@ def CLEANbestModel(dataBestModel,pollutant):
     
     return models
 
+
 def modelsEvaluation(dataModel,models,pollutant):
     cols = dataModel.columns.values
     rcol=[]
@@ -135,7 +72,7 @@ def modelsEvaluation(dataModel,models,pollutant):
     bestSample = dataModel[rcol]
     X = np.array(bestSample.dropna()[rcol[:-1]])
     y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
-    scorei=0
+    scorei=-100
     bestModel=[]
     for model in models:
         print(model)
@@ -147,7 +84,9 @@ def modelsEvaluation(dataModel,models,pollutant):
     print('-------Best model-------')
     print(bestModel)
     print(scorei)
+    
     return bestModel
+
 
 def saveModel(outPath,pollutant,deviceId,sensor,model):    
     import joblib
@@ -164,6 +103,5 @@ def CLEANpredict(outPath,pollutant,deviceId,sensor,signal):
     model = joblib.load(outPath+'/Calibration/'+str(deviceId)+'/CLEANmodel_'+\
               str(deviceId)+'_'+pollutant+'_'+str(sensor))
     preds = model.predict(np.array(signal).reshape(-1,1))
-    
     
     return preds
