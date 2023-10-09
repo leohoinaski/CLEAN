@@ -29,11 +29,13 @@ outPath = '/media/leohoinaski/HDD/CLEAN/data/Outputs'
 
 pollutants=['O3','CO','NO2','SO2']
 
-samplePerctg=0.7
+samplePerctg=0.5
 
 nIteration = 1000
 
 op = 'raw'
+
+deviceId = '01'
 
 dataModel = pd.DataFrame()
 dataBestModel = pd.DataFrame()
@@ -66,5 +68,8 @@ for pollutant in pollutants:
     
 for pollutant in pollutants:
     #model = CLEANmodel.CLEANann(dataBestModel,pollutant)
-    model = CLEANmodel.CLEANrandomForest (dataModel,pollutant)
-    CLEANfigures.scatterModelvsObs(dataModel,model,pollutant)
+    #model = CLEANmodel.CLEANrandomForest (dataModel,pollutant)
+    models = CLEANmodel.CLEANbestModel(dataBestModel,pollutant)
+    bestModel = CLEANmodel.modelsEvaluation(dataModel,models,pollutant)
+    CLEANfigures.scatterModelvsObs(dataModel,bestModel,pollutant)
+    CLEANmodel.saveModel(outPath,pollutant,deviceId,1,bestModel)
