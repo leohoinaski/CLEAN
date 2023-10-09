@@ -71,12 +71,55 @@ def plotCLEANvsREF(merge,pollutant):
     ax[1].set_ylabel(pollutant+' Reference')
     ax[1].set_xlabel('CLEAN')
     
-def scatterCLEANvsREF(merge):
+def scatterCLEANvsREF(merge,pollutant):
 
     fig, ax = plt.subplots()
     ax.scatter(merge['timeseries'][merge['ref']>0],
                   merge['ref'][merge['ref']>0],
                   color='gray',s=1, alpha=0.5,edgecolors='gray')
+    ax.set_ylabel(pollutant+' Reference')
+    ax.set_xlabel('CLEAN')
+    
+def plotRandomForestModel(merge,bestSample,model,model_ci):
+    fig, ax = plt.subplots()
+    # Plot predicted MPG without error bars
+    preds = model.predict(np.array(merge.dropna().timeseries).reshape(-1, 1))
+    ax.scatter(np.array(merge.dropna().ref).reshape(-1, 1), preds,alpha=0.5)
+    ax.plot([5, merge.dropna().ref.max()], [5, merge.dropna().ref.max()], 'k--')
+    ax.set_xlabel('Observer')
+    ax.set_ylabel('Predicted')
+
+    
+    # Plot error bars for predicted MPG using unbiased variance
+    ax.errorbar(np.array(merge.dropna().ref).reshape(-1,1),
+                 preds, yerr=np.sqrt(model_ci), fmt='o',alpha=0.5)
+
+
+
+
+def scatterModelvsObs(dataModel,model,pollutant):
+    
+    cols = dataModel.columns.values
+    rcol=[]
+    for col in cols:
+        if col.startswith('ref')==False:
+            rcol.append(col)
+    rcol.append('ref_'+pollutant)
+            
+    merge2 = dataModel[rcol]
+    X = np.array(merge2.dropna()[rcol[:-1]])
+    y = np.array(merge2.dropna()[rcol[-1]])
+    
+    fig, ax = plt.subplots()
+    # Plot predicted MPG without error bars
+    preds = model.predict(X)
+    ax.scatter(y, preds,alpha=0.5)
+    ax.plot([5, y.max()], [5, y.max()], 'k--')
+    ax.set_xlabel('Observed '+pollutant)
+    ax.set_ylabel('Predicted '+pollutant)
+    ax.set_xlim(0,y.max())
+    ax.set_ylim(0,y.max())
+    return preds
 
     
 def histCLEANvsREF(merge):
