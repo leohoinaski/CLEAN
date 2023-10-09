@@ -95,8 +95,6 @@ def plotRandomForestModel(merge,bestSample,model,model_ci):
                  preds, yerr=np.sqrt(model_ci), fmt='o',alpha=0.5)
 
 
-
-
 def scatterModelvsObs(dataModel,model,pollutant):
     
     cols = dataModel.columns.values
@@ -119,6 +117,7 @@ def scatterModelvsObs(dataModel,model,pollutant):
     ax.set_ylabel('Predicted '+pollutant)
     ax.set_xlim(0,y.max())
     ax.set_ylim(0,y.max())
+    ax.text(y.max()*0.7,y.max()*0.9,'R2 = '+"{:.3f}".format(model.score(X,y)))
     return preds
 
     
