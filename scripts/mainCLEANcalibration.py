@@ -11,7 +11,7 @@ import CLEANstats
 import CLEANfigures
 import pandas as pd
 import CLEANmodel
-
+from itertools import combinations
 
 
 #folder_path = r'C:\Users\rafab\OneDrive\Documentos\CLEAN_Calibration\data\data_clean\dados_brutos'
@@ -22,9 +22,9 @@ Reffolder_path = '/mnt/sdb1/CLEAN/data/Inputs/Reference/diamante'
 outPath = '/mnt/sdb1/CLEAN/data/Outputs'
 
 # PC CASA
-Reffolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/Reference/diamante'
-CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/CLEAN'
-outPath = '/media/leohoinaski/HDD/CLEAN/data/Outputs'
+# Reffolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/Reference/diamante'
+# CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/CLEAN'
+# outPath = '/media/leohoinaski/HDD/CLEAN/data/Outputs'
 
 # Inputs
 pollutants=['O3','CO','NO2','SO2']
@@ -36,6 +36,7 @@ sensor ='01'
 #------------------------------PROCESSING--------------------------------------
 dataModel = pd.DataFrame()
 dataBestModel = pd.DataFrame()
+
 
 # Loop for each pollutant
 for pollutant in pollutants:
@@ -58,7 +59,7 @@ for pollutant in pollutants:
     dataBestModel['ref_'+pollutant] =  bestSample['ref'].drop_duplicates()
     dataBestModel[pollutant] =  cleanData['timeseries'].drop_duplicates()
     
-    #CLEANfigures.scatterCLEANvsREF(bestSample)
+    # CLEANfigures.scatterCLEANvsREF(bestSample)
     
     # cleanDataboots = CLEANprepData.mainCLEANprepDataBootstrap(CLEANfolder_path,pollutant,bestSample)
 
@@ -66,11 +67,20 @@ for pollutant in pollutants:
     
     # stats,table,bestSample2 = CLEANstats.statistics(merge2,samplePerctg,nIteration)
     
-    #CLEANfigures.plotCLEANvsREF(bestSample2,pollutant)
+    # CLEANfigures.plotCLEANvsREF(bestSample2,pollutant)
+    
+
+covariates = pollutants
+polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
    
 # Model for each pollutant   
 for pollutant in pollutants:
-    models = CLEANmodel.CLEANbestModel(dataBestModel,pollutant)
-    bestModel = CLEANmodel.modelsEvaluation(dataModel,models,pollutant)
-    CLEANfigures.scatterModelvsObs(dataModel,bestModel,pollutant)
-    CLEANmodel.saveModel(outPath,pollutant,deviceId,sensor,bestModel)
+    for combs in polcombs:
+        if any(pollutant in s for s in combs):
+            print(combs)
+            combs.append('ref_'+pollutant)
+            models = CLEANmodel.CLEANbestModel(dataBestModel[combs],pollutant,outPath,deviceId,sensor)
+            bestModel = CLEANmodel.modelsEvaluation(dataModel[combs],models,pollutant)
+            CLEANfigures.scatterModelvsObs(dataModel[combs],bestModel,pollutant)
+            CLEANmodel.saveBestModel(outPath,pollutant,combs[:-1],deviceId,sensor,bestModel)
+        

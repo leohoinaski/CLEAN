@@ -10,7 +10,7 @@ import numpy as np
 import os
 
 
-def CLEANbestModel(dataBestModel,pollutant):
+def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor):
     from sklearn.tree import DecisionTreeRegressor
     from sklearn import linear_model
     from sklearn.neural_network import MLPRegressor
@@ -18,6 +18,7 @@ def CLEANbestModel(dataBestModel,pollutant):
     from sklearn.ensemble import RandomForestRegressor
     from sklearn import neighbors
     
+        
     classifiers = [
         DecisionTreeRegressor(max_depth=3, random_state=0),
         neighbors.KNeighborsRegressor(n_neighbors=5, weights='distance'),
@@ -38,16 +39,20 @@ def CLEANbestModel(dataBestModel,pollutant):
         if col.startswith('ref')==False:
             rcol.append(col)
     rcol.append('ref_'+pollutant)
-            
+    covariates = '_'.join(rcol[:-1])  
+    
     bestSample = dataBestModel[rcol]
     X = np.array(bestSample.dropna()[rcol[:-1]])
     y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
+    
     scorei=-100
     models=[]
     for item in classifiers:
         #print(item)
         model = item
         model.fit(X,y)
+        saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,
+                      str(dataBestModel.index.min()))
         score = model.score(X,y)
         #print(score)
         if score>scorei:
@@ -88,15 +93,28 @@ def modelsEvaluation(dataModel,models,pollutant):
     return bestModel
 
 
-def saveModel(outPath,pollutant,deviceId,sensor,model):    
+def saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,calibDate):    
     import joblib
-    os.makedirs(outPath+'/Calibration/'+str(deviceId), exist_ok=True)
-    with open(outPath+'/Calibration/'+str(deviceId)+'/CLEANmodel_'+
-              str(deviceId)+'_'+pollutant+'_'+str(sensor), 'wb') as f:
+    covariates = '_'.join(covariates) 
+    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/allModels', exist_ok=True)
+    with open(outPath+'/Calibration/'+str(deviceId)+'/allModels/CLEAN_model-'+
+              str(model).split('(')[0]+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
+              '_target-'+pollutant+'_covariates-'+covariates+'_calib-'+calibDate, 'wb') as f:
         joblib.dump(model, f)
     
     return model
 
+
+def saveBestModel(outPath,pollutant,covariates,deviceId,sensor,model):    
+    import joblib
+    covariates = '_'.join(covariates) 
+    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/bestModel', exist_ok=True)
+    with open(outPath+'/Calibration/'+str(deviceId)+'/bestModel/CLEAN_bestModel_'+
+              str(model).split('(')[0]+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
+              '_target-'+pollutant+'_covariates-'+covariates, 'wb') as f:
+        joblib.dump(model, f)
+    
+    return model
 
 def CLEANpredict(outPath,pollutant,deviceId,sensor,signal):
     import joblib
@@ -105,3 +123,5 @@ def CLEANpredict(outPath,pollutant,deviceId,sensor,signal):
     preds = model.predict(np.array(signal).reshape(-1,1))
     
     return preds
+
+
