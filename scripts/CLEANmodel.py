@@ -8,9 +8,9 @@ Created on Fri Oct  6 14:31:56 2023
 
 import numpy as np
 import os
+import pandas as pd
 
-
-def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor):
+def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
     from sklearn.tree import DecisionTreeRegressor
     from sklearn import linear_model
     from sklearn.neural_network import MLPRegressor
@@ -18,7 +18,7 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor):
     from sklearn.ensemble import RandomForestRegressor
     from sklearn import neighbors
     
-        
+
     classifiers = [
         DecisionTreeRegressor(max_depth=3, random_state=0),
         neighbors.KNeighborsRegressor(n_neighbors=5, weights='distance'),
@@ -32,28 +32,37 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor):
         linear_model.PassiveAggressiveRegressor(),
         linear_model.TheilSenRegressor(),
         linear_model.LinearRegression()]
+   
+    df_models = pd.DataFrame()   
+    df_models['model'] = np.zeros(len(classifiers))
+    df_models['score'] = np.zeros(len(classifiers))
+    df_models['covariates'] = np.zeros(len(classifiers))
+        
+    # cols = dataBestModel.columns.values
+    # rcol=[]
+    # for col in cols:
+    #     if col.startswith('ref')==False:
+    #         rcol.append(col)
+    # rcol.append('ref_'+pollutant)
+    # #covariates = '_'.join(rcol[:-1])  
     
-    cols = dataBestModel.columns.values
-    rcol=[]
-    for col in cols:
-        if col.startswith('ref')==False:
-            rcol.append(col)
-    rcol.append('ref_'+pollutant)
-    covariates = '_'.join(rcol[:-1])  
-    
-    bestSample = dataBestModel[rcol]
-    X = np.array(bestSample.dropna()[rcol[:-1]])
-    y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
+    bestSample = dataBestModel[covariates]
+    X = np.array(bestSample.dropna()[covariates[:-1]])
+    y = np.array(bestSample.dropna()[covariates[-1]]).ravel()
     
     scorei=-100
     models=[]
-    for item in classifiers:
+    for ii,item in enumerate(classifiers):
         #print(item)
         model = item
         model.fit(X,y)
         saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,
                       str(dataBestModel.index.min()))
         score = model.score(X,y)
+        df_models['model'][ii] = str(model).split('(')[0]
+        df_models['score'][ii] = score
+        df_models['covariates'][ii] = '_'.join(covariates[:-1]) 
+        
         #print(score)
         if score>scorei:
             scorei=score
@@ -62,7 +71,7 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor):
     print('-------Best model-------')
     print(bestModel)
     print(scorei)
-    
+
     return models
 
 
@@ -79,9 +88,16 @@ def modelsEvaluation(dataModel,models,pollutant):
     y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
     scorei=-100
     bestModel=[]
-    for model in models:
+    df_models = pd.DataFrame()   
+    df_models['model'] = np.zeros(len(models))
+    df_models['score'] = np.zeros(len(models))
+    df_models['covariates'] = np.zeros(len(models))
+    for ii, model in enumerate(models):
         print(model)
         score = model.score(X,y)
+        df_models['model'][ii] = str(model).split('(')[0]
+        df_models['score'][ii] = score
+        df_models['covariates'][ii] = '-'.join(rcol[:-1]) 
         print(score)
         if score>scorei:
             scorei=score
@@ -90,14 +106,14 @@ def modelsEvaluation(dataModel,models,pollutant):
     print(bestModel)
     print(scorei)
     
-    return bestModel
+    return bestModel,df_models
 
 
 def saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,calibDate):    
     import joblib
-    covariates = '_'.join(covariates) 
-    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/allModels', exist_ok=True)
-    with open(outPath+'/Calibration/'+str(deviceId)+'/allModels/CLEAN_model-'+
+    covariates = '-'.join(covariates[:-1]) 
+    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/allModels/'+pollutant, exist_ok=True)
+    with open(outPath+'/Calibration/'+str(deviceId)+'/allModels/'+pollutant+'/CLEAN_model-'+
               str(model).split('(')[0]+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
               '_target-'+pollutant+'_covariates-'+covariates+'_calib-'+calibDate, 'wb') as f:
         joblib.dump(model, f)
@@ -107,17 +123,45 @@ def saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,calibDate):
 
 def saveBestModel(outPath,pollutant,covariates,deviceId,sensor,model):    
     import joblib
-    covariates = '_'.join(covariates) 
-    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/bestModel', exist_ok=True)
-    with open(outPath+'/Calibration/'+str(deviceId)+'/bestModel/CLEAN_bestModel_'+
+    covariates = '-'.join(covariates) 
+    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant, exist_ok=True)
+    with open(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
               str(model).split('(')[0]+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
               '_target-'+pollutant+'_covariates-'+covariates, 'wb') as f:
         joblib.dump(model, f)
     
     return model
 
-def CLEANpredict(outPath,pollutant,deviceId,sensor,signal):
+
+def CLEANpredict(outPath,pollutant,deviceId,sensor,signal,covariates):
     import joblib
+    from itertools import combinations
+    path = outPath+'/Calibration/'+str(deviceId)
+    files = os.listdir(path)
+    for file in files:
+        if file.startswith('modelsScores_'+pollutant):
+            scores = pd.read_csv(path+'/'+file).sort_values('score', ascending=False)
+    
+    polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
+    polcombstr = []
+    for polcomb in polcombs:
+        polcomb = '-'.join(polcomb)
+        polcombstr.append(polcomb)
+        
+    
+    for index, row in scores.iterrows():
+        print(index)
+        for covstr in polcombstr:
+            if row.covariates==covstr:
+                print('models position: '+str(index))
+                print('models covariates: '+ covstr)
+                bestModel = row
+                break
+            
+                   
+    bestModel = scores[scores['covariates'] == covstr]
+    
+    
     model = joblib.load(outPath+'/Calibration/'+str(deviceId)+'/CLEANmodel_'+\
               str(deviceId)+'_'+pollutant+'_'+str(sensor))
     preds = model.predict(np.array(signal).reshape(-1,1))

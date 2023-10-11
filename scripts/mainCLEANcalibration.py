@@ -33,10 +33,12 @@ nIteration = 1000 # Number of random samples
 op = 'raw' # option to data preparing
 deviceId = '01' # Device Identification
 sensor ='01'
+
+
 #------------------------------PROCESSING--------------------------------------
+
 dataModel = pd.DataFrame()
 dataBestModel = pd.DataFrame()
-
 
 # Loop for each pollutant
 for pollutant in pollutants:
@@ -75,12 +77,20 @@ polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(
    
 # Model for each pollutant   
 for pollutant in pollutants:
+    all_models=[]
     for combs in polcombs:
         if any(pollutant in s for s in combs):
-            print(combs)
-            combs.append('ref_'+pollutant)
-            models = CLEANmodel.CLEANbestModel(dataBestModel[combs],pollutant,outPath,deviceId,sensor)
-            bestModel = CLEANmodel.modelsEvaluation(dataModel[combs],models,pollutant)
-            CLEANfigures.scatterModelvsObs(dataModel[combs],bestModel,pollutant)
-            CLEANmodel.saveBestModel(outPath,pollutant,combs[:-1],deviceId,sensor,bestModel)
+            #print(combs)
+            combi=combs.copy()
+            combi.append('ref_'+pollutant)
+            print(combi)
+            models = CLEANmodel.CLEANbestModel(dataBestModel[combi],pollutant,outPath,deviceId,sensor,combi)
+            bestModel,df_models = CLEANmodel.modelsEvaluation(dataModel[combi],models,pollutant)
+            all_models.append(df_models)
+            CLEANfigures.scatterModelvsObs(dataModel[combi],bestModel,pollutant)
+            CLEANmodel.saveBestModel(outPath,pollutant,combi[:-1],deviceId,sensor,bestModel)
+    df_models = pd.concat(all_models).sort_values('score', ascending=False)
+    df_models.to_csv(outPath+'/Calibration/'+str(deviceId)+'/modelsScores_'+
+                     pollutant+'_'+str(dataBestModel.index.min())+'.csv', index=False)
+            
         
