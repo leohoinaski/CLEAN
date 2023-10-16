@@ -9,6 +9,7 @@ Created on Fri Oct  6 14:31:56 2023
 import numpy as np
 import os
 import pandas as pd
+import ismember
 
 def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
     from sklearn.tree import DecisionTreeRegressor
@@ -133,39 +134,33 @@ def saveBestModel(outPath,pollutant,covariates,deviceId,sensor,model):
     return model
 
 
-def CLEANpredict(outPath,pollutant,deviceId,sensor,signal,covariates):
+def CLEANpredict(outPath,pollutant,deviceId,sensor,signal,df_covariates):
     import joblib
-    from itertools import combinations
+    # data = {'NO2': [2], 'SO2': [4],'PM10': [4]}
+    # df_covariates=pd.DataFrame(data)
     path = outPath+'/Calibration/'+str(deviceId)
     files = os.listdir(path)
     for file in files:
         if file.startswith('modelsScores_'+pollutant):
             scores = pd.read_csv(path+'/'+file).sort_values('score', ascending=False)
-    
-    polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
-    polcombstr = []
-    for polcomb in polcombs:
-        polcomb = '-'.join(polcomb)
-        polcombstr.append(polcomb)
         
-    
+    s1 = pd.Series(df_covariates.columns)
     for index, row in scores.iterrows():
-        print(index)
-        for covstr in polcombstr:
-            if row.covariates==covstr:
-                print('models position: '+str(index))
-                print('models covariates: '+ covstr)
-                bestModel = row
-                break
-            
-                   
-    bestModel = scores[scores['covariates'] == covstr]
+        lia,loc = ismember.ismember(row.covariates.split('-'),s1)
+        if lia.all():
+            print('This is the model: ' + row.model + ' - ' + row.covariates)
+            model = joblib.load(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
+                      str(row.model)+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
+                      '_target-'+pollutant+'_covariates-'+row.covariates)
+            break
+        else:
+            #print('Model not found')
+            model=[]
+    
+    coValues = np.array(df_covariates[row.covariates.split('-')]).reshape(1, -1)   
+    preds = model.predict(np.array(coValues))
     
     
-    model = joblib.load(outPath+'/Calibration/'+str(deviceId)+'/CLEANmodel_'+\
-              str(deviceId)+'_'+pollutant+'_'+str(sensor))
-    preds = model.predict(np.array(signal).reshape(-1,1))
-    
-    return preds
+    return preds,model
 
 

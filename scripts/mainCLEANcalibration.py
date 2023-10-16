@@ -12,7 +12,7 @@ import CLEANfigures
 import pandas as pd
 import CLEANmodel
 from itertools import combinations
-
+import shutil
 
 #folder_path = r'C:\Users\rafab\OneDrive\Documentos\CLEAN_Calibration\data\data_clean\dados_brutos'
 
@@ -75,6 +75,8 @@ for pollutant in pollutants:
 covariates = pollutants
 polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
    
+shutil.rmtree(outPath+'/Calibration/'+str(deviceId)+'/bestModel/')
+
 # Model for each pollutant   
 for pollutant in pollutants:
     all_models=[]
