@@ -76,7 +76,7 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
     return models
 
 
-def modelsEvaluation(dataModel,models,pollutant):
+def modelsEvaluation(dataModel,dataBestModel,models,pollutant):
     cols = dataModel.columns.values
     rcol=[]
     for col in cols:
@@ -84,9 +84,12 @@ def modelsEvaluation(dataModel,models,pollutant):
             rcol.append(col)
     rcol.append('ref_'+pollutant)
             
-    bestSample = dataModel[rcol]
-    X = np.array(bestSample.dropna()[rcol[:-1]])
-    y = np.array(bestSample.dropna()[rcol[-1]]).ravel()
+    #bestSample = dataModel[rcol]
+    dataAll = dataModel[rcol].copy()
+    dataTrain = dataBestModel[rcol].copy()
+    dataTest = pd.merge(dataAll,dataTrain, indicator=True, how='outer').query('_merge=="left_only"').drop('_merge', axis=1)
+    X = np.array(dataTest.dropna()[rcol[:-1]])
+    y = np.array(dataTest.dropna()[rcol[-1]]).ravel()
     scorei=-100
     bestModel=[]
     df_models = pd.DataFrame()   
@@ -107,7 +110,7 @@ def modelsEvaluation(dataModel,models,pollutant):
     print(bestModel)
     print(scorei)
     
-    return bestModel,df_models
+    return bestModel,df_models,dataTest
 
 
 def saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,calibDate):    
@@ -134,11 +137,11 @@ def saveBestModel(outPath,pollutant,covariates,deviceId,sensor,model):
     return model
 
 
-def CLEANpredict(outPath,pollutant,deviceId,sensor,signal,df_covariates):
+def CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates):
     import joblib
     # data = {'NO2': [2], 'SO2': [4],'PM10': [4]}
     # df_covariates=pd.DataFrame(data)
-    path = outPath+'/Calibration/'+str(deviceId)
+    path = outPath+'/Calibration/'+str(deviceId)+'/modelsScores'
     files = os.listdir(path)
     for file in files:
         if file.startswith('modelsScores_'+pollutant):

@@ -13,27 +13,34 @@ import pandas as pd
 import CLEANmodel
 from itertools import combinations
 import shutil
+import os
 
 #folder_path = r'C:\Users\rafab\OneDrive\Documentos\CLEAN_Calibration\data\data_clean\dados_brutos'
 
 # PC LAB
-CLEANfolder_path = '/mnt/sdb1/CLEAN/data/Inputs/CLEAN'
-Reffolder_path = '/mnt/sdb1/CLEAN/data/Inputs/Reference/diamante'
-outPath = '/mnt/sdb1/CLEAN/data/Outputs'
+# CLEANfolder_path = '/mnt/sdb1/CLEAN/data/Inputs/CLEAN'
+# Reffolder_path = '/mnt/sdb1/CLEAN/data/Inputs/Reference/diamante'
+# outPath = '/mnt/sdb1/CLEAN/data/Outputs'
 
 # PC CASA
 # Reffolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/Reference/diamante'
 # CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/CLEAN'
 # outPath = '/media/leohoinaski/HDD/CLEAN/data/Outputs'
 
+
 # Inputs
 pollutants=['O3','CO','NO2','SO2']
-samplePerctg=0.7 # Percentage of data for training 
+samplePerctg=0.5 # Percentage of data for training 
 nIteration = 1000 # Number of random samples
 op = 'raw' # option to data preparing
 deviceId = '01' # Device Identification
 sensor ='01'
 
+# Directories
+cwd = os.path.dirname(os.getcwd())
+CLEANfolder_path = cwd+'/data/Inputs/CLEAN'
+Reffolder_path = cwd+'/data/Inputs/Reference/diamante'
+outPath = cwd+'/data/Outputs'
 
 #------------------------------PROCESSING--------------------------------------
 
@@ -74,8 +81,11 @@ for pollutant in pollutants:
 
 covariates = pollutants
 polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
-   
-shutil.rmtree(outPath+'/Calibration/'+str(deviceId)+'/bestModel/')
+ 
+if os.path.isdir(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'):
+    shutil.rmtree(outPath+'/Calibration/'+str(deviceId)+'/bestModel/')
+
+os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/modelsScores/', exist_ok=True)
 
 # Model for each pollutant   
 for pollutant in pollutants:
@@ -87,12 +97,12 @@ for pollutant in pollutants:
             combi.append('ref_'+pollutant)
             print(combi)
             models = CLEANmodel.CLEANbestModel(dataBestModel[combi],pollutant,outPath,deviceId,sensor,combi)
-            bestModel,df_models = CLEANmodel.modelsEvaluation(dataModel[combi],models,pollutant)
+            bestModel,df_models,dataTest = CLEANmodel.modelsEvaluation(dataModel[combi],dataBestModel,models,pollutant)
             all_models.append(df_models)
-            CLEANfigures.scatterModelvsObs(dataModel[combi],bestModel,pollutant)
+            CLEANfigures.scatterModelvsObs(dataTest,bestModel,pollutant)
             CLEANmodel.saveBestModel(outPath,pollutant,combi[:-1],deviceId,sensor,bestModel)
     df_models = pd.concat(all_models).sort_values('score', ascending=False)
-    df_models.to_csv(outPath+'/Calibration/'+str(deviceId)+'/modelsScores_'+
-                     pollutant+'_'+str(dataBestModel.index.min())+'.csv', index=False)
+    df_models.to_csv(outPath+'/Calibration/'+str(deviceId)+'/modelsScores/modelsScores_'+
+                     pollutant+'.csv', index=False)
             
         
