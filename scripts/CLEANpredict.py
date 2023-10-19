@@ -52,7 +52,7 @@ def CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates):
     
     df_covariates = df_covariates.dropna(axis='columns')
 
-    path = outPath+'/Calibration/'+str(deviceId)+'/modelsScores'
+    path = outPath+'/Calibration/'+str(deviceId).zfill(2)+'/modelsScores'
     files = os.listdir(path)
     for file in files:
         if file.startswith('modelsScores_'+pollutant):
@@ -63,40 +63,61 @@ def CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates):
         lia,loc = ismember.ismember(row.covariates.split('-'),s1)
         if lia.all():
             print('This is the model: ' + row.model + ' - ' + row.covariates)
-            model = joblib.load(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
-                      str(row.model)+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
+            print('-')
+            print(outPath+'/Calibration/'+str(deviceId).zfill(2)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
+                      str(row.model)+'_id-'+str(deviceId).zfill(2)+'_Sensor-'+str(sensor).zfill(2)+
+                      '_target-'+pollutant+'_covariates-'+row.covariates)
+            print('-')
+            model = joblib.load(outPath+'/Calibration/'+str(deviceId).zfill(2)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
+                      str(row.model)+'_id-'+str(deviceId).zfill(2)+'_Sensor-'+str(sensor).zfill(2)+
                       '_target-'+pollutant+'_covariates-'+row.covariates)
             break
         else:
             #print('Model not found')
             model=[]
     
-    coValues = np.array(df_covariates[row.covariates.split('-')]).reshape(1, -1)   
+    coValues = np.array(df_covariates[row.covariates.split('-')])  
     preds = model.predict(np.array(coValues))
     
     
     return preds,model
 
 
-TEMPERATURE_ID     =  130
-PRESSURE_ID        =  131
-ALPHA_CO_ID        =  132
-ALPHA_NO2_ID       =  133
-ALPHA_SO2_1_ID     =  134
-ALPHA_OX_1_ID      =  135
-ALPHA_OX_2_ID      =  136
-ALPHA_SO2_2_ID     =  137
-EXT_TEMPERATURE_ID =  138
-EXT_HUMIDITY_ID    =  139
-PM10_ID            =  140
-PM25_ID            =  141
-PM01_ID            =  142
-OPC_TEMPERATURE_ID =  143
-OPC_HUMIDITY_ID    =  144
+def mainCLEANpredict(outPath,pollutant,deviceId,sensor):
 
-HOST = "renovar.lcqar.ufsc.br"
-PORT = 8080
-GET_SAMPLES_BY_SENSOR = "/sample/sensor/all/"
-HTTP_REQUEST_MAIN = 'http://' + HOST + ':' + str(PORT) + GET_SAMPLES_BY_SENSOR
+    TEMPERATURE_ID     =  130
+    PRESSURE_ID        =  131
+    ALPHA_CO_ID        =  132
+    ALPHA_NO2_ID       =  133
+    ALPHA_SO2_1_ID     =  134
+    ALPHA_OX_1_ID      =  135
+    ALPHA_OX_2_ID      =  136
+    ALPHA_SO2_2_ID     =  137
+    EXT_TEMPERATURE_ID =  138
+    EXT_HUMIDITY_ID    =  139
+    PM10_ID            =  140
+    PM25_ID            =  141
+    PM01_ID            =  142
+    OPC_TEMPERATURE_ID =  143
+    OPC_HUMIDITY_ID    =  144
 
-sensor_data = GetSensorDataService.get_samples_by_sensor(HTTP_REQUEST_MAIN,ALPHA_OX_1_ID)
+    HOST = "renovar.lcqar.ufsc.br"
+    PORT = 8080
+    GET_SAMPLES_BY_SENSOR = "/sample/sensor/all/"
+    HTTP_REQUEST_MAIN = 'http://' + HOST + ':' + str(PORT) + GET_SAMPLES_BY_SENSOR
+
+
+    sensor_data = GetSensorDataService.get_samples_by_sensor(HTTP_REQUEST_MAIN,ALPHA_OX_1_ID)
+
+    df_covariates = sensor_data[['date','measuring']]
+
+    df_covariates.columns=['datetime',pollutant]
+    df_covariates=df_covariates.set_index('datetime')
+
+    preds,model = CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates)
+
+    return preds
+
+
+
+#mainCLEANpredict(outPath,'O3',1,1)
