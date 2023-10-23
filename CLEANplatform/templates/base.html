@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.2.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+
+    <link href="{{STATIC_URL}}/static/css/darkMode.css" rel="stylesheet">
+    <link href="{{STATIC_URL}}/static/css/style.css" rel="stylesheet">
+    <title>Gráficos em tempo real</title>
+
+    <style>
+        .drag {
+            width: 48%;
+            min-height: 6.5em;
+            margin: 10px;
+            background-color: var(--bg-panel);
+            color: var(--color-text);
+            border-radius: 0.75em;
+            padding: 10px;
+            touch-action: none;
+            user-select: none;
+            transform: translate(0px, 0px);
+            }
+    </style>
+    
+
+	<title>CLEAN</title>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-10 mx-auto mt-5">
+
+				<h1 id="app">
+
+					{{ text1 }}
+
+				</h1>
+
+				<h1 id="app1">
+
+					{{ text2 }}
+
+				</h1>
+
+			</div>
+		</div>
+		
+	</div>
+    <div class="row container-fluid">
+        <div class="row align-items-center">
+            <div class="col-6 draggable drag">
+                <canvas id='myChart' ></canvas>
+            </div>
+        </div>
+    </div>
+<!-- 
+    <canvas id="myChart" width="500" height="400"></canvas>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+    <script type="text/javascript">
+        $.get('{% url "line_chart_json" %}', function(data) {
+            var ctx = $("#myChart").get(0).getContext("2d");
+            new Chart(ctx, {
+                type: 'line', data: data
+            });
+        });
+    </script> -->
+
+
+
+	<script src="{% static 'main.js' %}"></script>
+	<script src="{% static 'js/dragDrop.js' %}"></script>
+<!-- 	<script>
+		
+		var socket = new WebSocket('ws://localhost:8000/ws/CLEANview/');
+
+		socket.onmessage = function(e){
+
+			var djangoData = JSON.parse(e.data);
+			console.log(djangoData);
+			document.querySelector('#app').innerText = djangoData.value;
+
+		}
+
+	</script> -->
+
+</body>
+</html>
