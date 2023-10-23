@@ -15,24 +15,25 @@ var graphData = {
             fill: true
         }]
     },
-    options: {
-        bezierCurve: true,
-        scales: {
-            x: {
-                ticks: {
-                    // Include dynamic date in x axe
-                    callback: function(value, index, values) {
-                        var date = new Date();
-                        return ((date.getDate() )) + "/" + ((date.getMonth() + 1)) + "/" + date.getFullYear() + '-' + date.getHours() + ':' + date.getMinutes() +':' + date.getSeconds(); 
-                    }
-                }
-            }
-        }
-    }
+
+    // options: {
+    //     bezierCurve: true,
+    //     scales: {
+    //         x: {
+    //             ticks: {
+    //                 //Include dynamic date in x axe
+    //                 callback: function(value, index, values) {
+    //                     var date = new Date();
+    //                     return ((date.getDate() )) + "/" + ((date.getMonth() + 1)) + "/" + date.getFullYear() + '-' + date.getHours() + ':' + date.getMinutes() +':' + date.getSeconds(); 
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 function addDataLinear(chart, label, data) {
-
+    chart.data.labels.push(label);
     var newGraphData = graphData.data.datasets[0].data;
     newGraphData.shift();
     newGraphData.push(data);
@@ -50,7 +51,7 @@ socket.onmessage = function(e){
 	console.log(djangoData);
 	document.querySelector('#app').innerText = djangoData.value;
 	document.querySelector('#app1').innerText = djangoData.date;
-	addDataLinear(myChart, 1, djangoData.value)
+	addDataLinear(myChart, djangoData.date, djangoData.value)
 
 }
 
