@@ -37,7 +37,7 @@ function addDataLinear(chart, label, data) {
     newGraphData.shift();
     newGraphData.push(data);
     graphData.data.datasets[0].data = newGraphData;
-    myChart.update();
+    chart.update();
 
 
 }
