@@ -38,9 +38,9 @@ sensor ='01'
 
 # Directories
 cwd = os.path.dirname(os.getcwd())
-CLEANfolder_path = cwd+'/data/Inputs/CLEAN'
-Reffolder_path = cwd+'/data/Inputs/Reference/diamante'
-outPath = cwd+'/data/Outputs'
+CLEANfolder_path = cwd+'/CLEAN/data/Inputs/CLEAN'
+Reffolder_path = cwd+'/CLEAN/data/Inputs/Reference/diamante'
+outPath = cwd+'/CLEAN/data/Outputs'
 
 #------------------------------PROCESSING--------------------------------------
 

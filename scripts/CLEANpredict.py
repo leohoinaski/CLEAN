@@ -105,19 +105,20 @@ def mainCLEANpredict(outPath,pollutant,deviceId,sensor):
     PORT = 8080
     GET_SAMPLES_BY_SENSOR = "/sample/sensor/all/"
     HTTP_REQUEST_MAIN = 'http://' + HOST + ':' + str(PORT) + GET_SAMPLES_BY_SENSOR
+    sensor_service = GetSensorDataService(HOST, PORT)
 
+    sensor_data = sensor_service.get_samples_by_sensor(ALPHA_OX_1_ID)
 
-    sensor_data = GetSensorDataService.get_samples_by_sensor(HTTP_REQUEST_MAIN,ALPHA_OX_1_ID)
+    df_covariates = sensor_data
 
-    df_covariates = sensor_data[['date','measuring']]
-
-    df_covariates.columns=['datetime',pollutant]
-    df_covariates=df_covariates.set_index('datetime')
+    df_covariates.columns=[pollutant]
+    # df_covariates=df_covariates.set_index('datetime')
 
     preds,model = CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates)
 
     return preds
 
 
-
-#mainCLEANpredict(outPath,'O3',1,1)
+cwd = os.path.dirname(os.getcwd())
+outPath = cwd+'/CLEAN/data/Outputs'
+mainCLEANpredict(outPath,'O3',1,1)
