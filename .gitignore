@@ -1,4 +1,8 @@
-CLEANplatform/static/Calibration
+static/Calibration
+CLEANplatform/_pycache_
+CLEANview/_pycache_
+CLEANplatform/pyEnv
+CLEANcalibration/data
 data
 pyEnv
 .ipynb_checkpoints
