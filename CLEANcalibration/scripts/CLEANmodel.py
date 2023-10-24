@@ -10,6 +10,8 @@ import numpy as np
 import os
 import pandas as pd
 import ismember
+from contextlib import redirect_stdout
+
 
 def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
     from sklearn.tree import DecisionTreeRegressor
@@ -63,7 +65,12 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
         df_models['model'][ii] = str(model).split('(')[0]
         df_models['score'][ii] = score
         df_models['covariates'][ii] = '_'.join(covariates[:-1]) 
-        
+
+        with open(outPath+'/Calibration/'+str(deviceId)+'/modelsScores/'+
+            'modelsummary'+'_target-'+pollutant+'_covariates-'+'-'.join(covariates[:-1]) +'.txt', 'w') as f:
+            with redirect_stdout(f):
+                model.summary()
+
         #print(score)
         if score>scorei:
             scorei=score
