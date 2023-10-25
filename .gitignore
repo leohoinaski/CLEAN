@@ -5,6 +5,7 @@ CLEANplatform/pyEnv
 CLEANcalibration/data
 data
 pyEnv
+pyenv
 .ipynb_checkpoints
 .ipynb_checkpoints
 *.pyc
