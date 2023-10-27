@@ -23,7 +23,7 @@ from sklearn.neighbors import KernelDensity
 from statsmodels.nonparametric.bandwidths import bw_silverman
 from sklearn.mixture import GaussianMixture
 #from scipy.stats import norm
-from CLEANfigures import plotWindows
+#from CLEANfigures import plotWindows
 
 
 def openMonitor(folder_path,pollutant):

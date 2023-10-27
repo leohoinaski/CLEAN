@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import numpy as np
 import ismember
-from GetSensorDataService import GetSensorDataService
+from .GetSensorDataService import GetSensorDataService
 
 
 def CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates):

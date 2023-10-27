@@ -17,7 +17,7 @@ class CLEANcalibrationNewDeviceModel (models.Model):
 	CLEAN07 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	CLEAN08 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 
-	REF01 = models.FileField(upload_to='calibratione', max_length=100,null=True, blank=True)
+	REF01 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	REF02 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	REF03 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	REF04 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)

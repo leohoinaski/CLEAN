@@ -1,50 +1,73 @@
 from django.shortcuts import render
 from .forms import CLEANcalibrationNewDevice_form
-from .models import CLEANcalibrationNewDevice
+from .models import CLEANcalibrationNewDeviceModel
 from django.contrib import messages
-
-
+from multiprocessing import Process
+import os
+import shutil
 from django.shortcuts import render, get_object_or_404, redirect
-
+from .mainCLEANcalibration import mainCLEANcalibration
 
 
 def CLEANcalibrationNewDevice (request):
     if request.method == 'POST':
         form = CLEANcalibrationNewDevice_form(request.POST, request.FILES)
         if form.is_valid():
-        	form.save()
-            
-            CLEANcalib = CLEANcalibrationNewDevice.objects.all().last()
+            form.save()
+            CLEANcalib = CLEANcalibrationNewDeviceModel.objects.all().last()
             BASE = (os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             deviceId = CLEANcalib.deviceId
 
             RUN_FOLDER = BASE + "/media/calibration/"+ str(deviceId) + "/"
-            if os.path.isdir(BASE + "/media/getElev/") ==0:
-                os.mkdir(BASE + "/media/getElev/")
-            if os.path.isdir(RUN_FOLDER) ==1:
-                shutil.rmtree(RUN_FOLDER)
-                os.mkdir(RUN_FOLDER)
+
+            if os.path.isdir(RUN_FOLDER) ==0:
+                os.makedirs(RUN_FOLDER, exist_ok=True)
             else:
-                os.mkdir(RUN_FOLDER)
+                shutil.rmtree(RUN_FOLDER)
 
-            STATIC_SRTM = BASE+'/static/inventory/SRTM/'
-            SRTM_selectGetElev(STATIC_SRTM,RUN_FOLDER,getElev_OBJ.srcFile.path)
-            getElevSRTM(RUN_FOLDER,getElev_OBJ.srcFile.path)
+            if os.path.isdir(RUN_FOLDER+'Inputs/CLEAN') ==0:
+                os.makedirs(RUN_FOLDER+'Inputs/CLEAN', exist_ok=True)
 
-            file_path = RUN_FOLDER + "/getElev.csv"
-            if os.path.exists(file_path):
-                with open(file_path, 'rb') as fh:
-                    response = HttpResponse(fh.read(), content_type="text/csv")
-                    response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
-                    return response
-                    #return redirect('blog-smart')
-            shutil.rmtree(RUN_FOLDER)
-            shutil.rmtree(BASE + "/media/getElev/")
+            if os.path.isdir(RUN_FOLDER+'Inputs/Reference') ==0:
+                os.makedirs(RUN_FOLDER+'Inputs/Reference', exist_ok=True)
+                os.makedirs(RUN_FOLDER+'Outputs', exist_ok=True)
 
+            if CLEANcalib.CLEAN01:
+                shutil.copy(CLEANcalib.CLEAN01.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN01.path.split('/')[-1])
+            if CLEANcalib.CLEAN02:
+                shutil.copy(CLEANcalib.CLEAN02.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN02.path.split('/')[-1])
+            if CLEANcalib.CLEAN03:
+                shutil.copy(CLEANcalib.CLEAN03.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN03.path.split('/')[-1])
+            if CLEANcalib.CLEAN04:
+                shutil.copy(CLEANcalib.CLEAN04.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN04.path.split('/')[-1])
+            if CLEANcalib.CLEAN05:
+                shutil.copy(CLEANcalib.CLEAN05.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN05.path.split('/')[-1])
+            if CLEANcalib.CLEAN06:
+                shutil.copy(CLEANcalib.CLEAN06.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN06.path.split('/')[-1])
 
-        	messages.success(request, f'Your file was updated!')
+            if CLEANcalib.REF01:
+                shutil.copy(CLEANcalib.REF01.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.REF01.path.split('/')[-1])
+            if CLEANcalib.REF02:
+                shutil.copy(CLEANcalib.REF02.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.REF02.path.split('/')[-1])
+            if CLEANcalib.REF03:
+                shutil.copy(CLEANcalib.REF03.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.REF03.path.split('/')[-1])
+            if CLEANcalib.REF04:
+                shutil.copy(CLEANcalib.REF04.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.REF04.path.split('/')[-1])
+            if CLEANcalib.REF05:
+                shutil.copy(CLEANcalib.REF05.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.REF05.path.split('/')[-1])
+            if CLEANcalib.REF06:
+                shutil.copy(CLEANcalib.REF06.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.REF06.path.split('/')[-1])
 
-        	return redirect('CLEANcalibrationNewDevice')
+            
+            CLEANpollutants = [f.split('_')[1] for f in os.listdir(RUN_FOLDER+'Inputs/CLEAN/') if os.path.isfile(os.path.join(RUN_FOLDER+'Inputs/CLEAN/', f))]
+            REFpollutants = [f.split('_')[1] for f in os.listdir(RUN_FOLDER+'Inputs/Reference/') if os.path.isfile(os.path.join(RUN_FOLDER+'Inputs/Reference/', f))]
+
+            print(REFpollutants)
+
+            p = Process(target=mainCLEANcalibration, args=(BASE,deviceId,CLEANpollutants,REFpollutants,1,50,1000,'raw'))
+            p.start()
+            messages.success(request, f'Your file was updated!')
+            return redirect('CLEANcalibrationNewDevice')
 
 
             
