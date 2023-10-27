@@ -66,10 +66,10 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
         df_models['score'][ii] = score
         df_models['covariates'][ii] = '_'.join(covariates[:-1]) 
 
-        with open(outPath+'/Calibration/'+str(deviceId)+'/modelsScores/'+
-            'modelsummary'+'_target-'+pollutant+'_covariates-'+'-'.join(covariates[:-1]) +'.txt', 'w') as f:
-            with redirect_stdout(f):
-                model.summary()
+        # with open(outPath+'/modelsScores/'+
+        #     'modelsummary'+'_target-'+pollutant+'_covariates-'+'-'.join(covariates[:-1]) +'.txt', 'w') as f:
+        #     with redirect_stdout(f):
+        #         model.summary()
 
         #print(score)
         if score>scorei:
@@ -125,8 +125,8 @@ def modelsEvaluation(dataModel,dataBestModel,models,pollutant):
 def saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,calibDate):    
     import joblib
     covariates = '-'.join(covariates[:-1]) 
-    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/allModels/'+pollutant, exist_ok=True)
-    with open(outPath+'/Calibration/'+str(deviceId)+'/allModels/'+pollutant+'/CLEAN_model-'+
+    os.makedirs(outPath+'/allModels/'+pollutant, exist_ok=True)
+    with open(outPath+'/allModels/'+pollutant+'/CLEAN_model-'+
               str(model).split('(')[0]+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
               '_target-'+pollutant+'_covariates-'+covariates+'_calib-'+calibDate, 'wb') as f:
         joblib.dump(model, f)
@@ -137,8 +137,8 @@ def saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,calibDate):
 def saveBestModel(outPath,pollutant,covariates,deviceId,sensor,model):    
     import joblib
     covariates = '-'.join(covariates) 
-    os.makedirs(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant, exist_ok=True)
-    with open(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
+    os.makedirs(outPath+'/bestModel/'+pollutant, exist_ok=True)
+    with open(outPath+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
               str(model).split('(')[0]+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
               '_target-'+pollutant+'_covariates-'+covariates, 'wb') as f:
         joblib.dump(model, f)
@@ -150,7 +150,7 @@ def CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates):
     import joblib
     # data = {'NO2': [2], 'SO2': [4],'PM10': [4]}
     # df_covariates=pd.DataFrame(data)
-    path = outPath+'/Calibration/'+str(deviceId)+'/modelsScores'
+    path = outPath+'/modelsScores'
     files = os.listdir(path)
     for file in files:
         if file.startswith('modelsScores_'+pollutant):
@@ -161,7 +161,7 @@ def CLEANpredict(outPath,pollutant,deviceId,sensor,df_covariates):
         lia,loc = ismember.ismember(row.covariates.split('-'),s1)
         if lia.all():
             print('This is the model: ' + row.model + ' - ' + row.covariates)
-            model = joblib.load(outPath+'/Calibration/'+str(deviceId)+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
+            model = joblib.load(outPath+'/bestModel/'+pollutant+'/CLEAN_bestModel-'+
                       str(row.model)+'_id-'+str(deviceId)+'_Sensor-'+str(sensor)+
                       '_target-'+pollutant+'_covariates-'+row.covariates)
             break

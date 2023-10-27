@@ -16,6 +16,7 @@ def statistics(merge,samplePerctg,nIteration,pollutant):
     corri = -2
     corr=[]
     for ii in range(0,nIteration):
+        print(ii)
         cr,sample = weighted_bootstrap_corr(merge,'ref_'+pollutant,pollutant,samplePerctg) 
         if cr>corri:
             corri=cr

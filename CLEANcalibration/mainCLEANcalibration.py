@@ -73,7 +73,7 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
         merge=pd.merge(dataModel,refData, how='inner', left_index=True, right_index=True)
         #merge = merge.rename(columns={'ref': 'ref_'+pollutant})
         merge = merge.drop('ref', axis=1)
-        #print(merge)
+        print(merge)
         
         # Get best sample for training
         stats,table,dataBestModel = statistics(merge,samplePerctg,nIteration,pollutant)
@@ -107,8 +107,8 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
                 combi=combs.copy()
                 combi.append('ref_'+pollutant)
                 print(combi)
-                models = CLEANmodel.CLEANbestModel(dataBestModel[combi],pollutant,outPath,deviceId,sensor,combi)
-                bestModel,df_models,dataTest,dataTrain = CLEANmodel.modelsEvaluation(dataModel[combi],dataBestModel,models,pollutant)
+                models = CLEANbestModel(dataBestModel[combi],pollutant,outPath,deviceId,sensor,combi)
+                bestModel,df_models,dataTest,dataTrain = modelsEvaluation(dataModel[combi],dataBestModel,models,pollutant)
                 os.makedirs(outPath+'/trainAndTest', exist_ok=True)
                 dataTest.to_csv(outPath+'/trainAndTest/test_'+
                          '-'.join(combi) +'.csv', index=False)
@@ -116,7 +116,7 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
                          '-'.join(combi) +'.csv', index=False)
                 all_models.append(df_models)
                 #CLEANfigures.scatterModelvsObs(dataTest,bestModel,pollutant)
-                CLEANmodel.saveBestModel(outPath,pollutant,combi[:-1],deviceId,sensor,bestModel)
+                saveBestModel(outPath,pollutant,combi[:-1],deviceId,sensor,bestModel)
         df_models = pd.concat(all_models).sort_values('score', ascending=False)
         df_models.to_csv(outPath+'/modelsScores/modelsScores_'+
                          pollutant+'.csv', index=False)

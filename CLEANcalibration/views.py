@@ -71,7 +71,7 @@ def CLEANcalibrationNewDevice (request):
 
             #pollutants = mainCLEANcalibration(BASE,deviceId,CLEANpollutants,refpols,1,50,1000,'raw')
             #print(pollutants)
-            p = Process(target=mainCLEANcalibration, args=(BASE,deviceId,CLEANpollutants,refpols,1,50,1000,'raw'))
+            p = Process(target=mainCLEANcalibration, args=(BASE,deviceId,CLEANpollutants,refpols,1,50,10,'raw'))
             p.start()
             messages.success(request, f'Your file was updated!')
             return redirect('CLEANcalibrationNewDevice')
