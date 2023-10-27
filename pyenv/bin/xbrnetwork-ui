@@ -1,4 +1,4 @@
-#!/mnt/sdb1/CLEAN/pyenv/bin/python3
+#!/media/leohoinaski/HDD/CLEAN/pyenv/bin/python3
 # EASY-INSTALL-ENTRY-SCRIPT: 'autobahn==23.6.2','console_scripts','xbrnetwork-ui'
 import re
 import sys

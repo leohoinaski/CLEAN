@@ -1,4 +1,4 @@
-#!/mnt/sdb1/CLEAN/pyenv/bin/python3
+#!/media/leohoinaski/HDD/CLEAN/pyenv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

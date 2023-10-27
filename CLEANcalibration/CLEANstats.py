@@ -10,21 +10,21 @@ import scipy
 import pandas as pd
 import numpy as np
 
-def statistics(merge,samplePerctg,nIteration):
+def statistics(merge,samplePerctg,nIteration,pollutant):
 
     bestSample=[]
     corri = -2
     corr=[]
     for ii in range(0,nIteration):
-        cr,sample = weighted_bootstrap_corr(merge,'ref','timeseries',samplePerctg) 
+        cr,sample = weighted_bootstrap_corr(merge,'ref_'+pollutant,pollutant,samplePerctg) 
         if cr>corri:
             corri=cr
             bestSample=sample
         corr.append(cr)
     print('Best correlation = '+str(corri))
     table = summarize(corr, digits=3)
-    rho, rho_pval = scipy.stats.spearmanr(bestSample['timeseries'],
-                 bestSample['ref'], axis=0, nan_policy='omit')
+    rho, rho_pval = scipy.stats.spearmanr(bestSample[pollutant],
+                 bestSample['ref_'+pollutant], axis=0, nan_policy='omit')
     
     stats = pd.DataFrame(dict(rho=[], rho_pval=[]), dtype=float)
     try:
@@ -37,7 +37,7 @@ def statistics(merge,samplePerctg,nIteration):
 
 def weighted_bootstrap_corr(df, var1, var2, samplePerctg):
     n = int(len(df)*samplePerctg)
-    sample = df.sample(n=n, replace=True, weights='ref')
+    sample = df.sample(n=n, replace=True, weights=var1)
     rho, rho_pval = scipy.stats.spearmanr(sample[var1],
                  sample[var2], axis=0, nan_policy='omit')
     

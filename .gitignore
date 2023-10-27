@@ -6,6 +6,7 @@ CLEANcalibration/data
 data
 pyEnv
 pyenv
+media
 .ipynb_checkpoints
 .ipynb_checkpoints
 *.pyc

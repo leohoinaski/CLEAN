@@ -47,8 +47,16 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
     Reffolder_path = BASE + "/media/calibration/"+ str(deviceId) +'/Inputs/Reference'
     outPath = BASE + "/media/calibration/"+ str(deviceId) +'/Outputs'
 
+    if os.path.isdir(outPath+'/bestModel/'):
+        shutil.rmtree(outPath+'/bestModel/')
+
+    os.makedirs(outPath+'/modelsScores/', exist_ok=True)
+
     dataModel = pd.DataFrame()
     dataBestModel = pd.DataFrame()
+
+    pollutants= list(set(CLEANpollutants) | set(REFpollutants))
+
 
     # Loop for each pollutant
     for pollutant in REFpollutants:
@@ -56,20 +64,27 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
         refData = mainREFprepData(Reffolder_path,pollutant)
         dataModel['ref_'+pollutant] =  refData
         
-        # CLEAN data
-        cleanData = mainCLEANprepData(CLEANfolder_path,pollutant,op)
-        dataModel[pollutant] =  cleanData
+        for cleanpol in CLEANpollutants:
+            # CLEAN data
+            cleanData = mainCLEANprepData(CLEANfolder_path,cleanpol,op)
+            dataModel[cleanpol] =  cleanData
         
         # Merging DataFrames
-        merge=pd.merge(cleanData,refData, how='inner', left_index=True, right_index=True)
+        merge=pd.merge(dataModel,refData, how='inner', left_index=True, right_index=True)
+        #merge = merge.rename(columns={'ref': 'ref_'+pollutant})
+        merge = merge.drop('ref', axis=1)
+        #print(merge)
         
         # Get best sample for training
-        stats,table,bestSample = statistics(merge,samplePerctg,nIteration)
+        stats,table,dataBestModel = statistics(merge,samplePerctg,nIteration,pollutant)
         print(table)
         
         # Extracting data 
-        dataBestModel['ref_'+pollutant] =  bestSample['ref'].drop_duplicates()
-        dataBestModel[pollutant] =  cleanData['timeseries'].drop_duplicates()
+        dataBestModel = dataBestModel.rename(columns={'ref': 'ref_'+pollutant})
+
+        #dataBestModel['ref_'+pollutant] =  bestSample['ref'].drop_duplicates()
+
+        #dataBestModel[pollutant] =  cleanData['timeseries'].drop_duplicates()
 
         # CLEANfigures.scatterCLEANvsREF(bestSample)
         
@@ -82,16 +97,9 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
         # CLEANfigures.plotCLEANvsREF(bestSample2,pollutant)
 
 
-    covariates = REFpollutants
-    polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
-     
-    if os.path.isdir(outPath+'/bestModel/'):
-        shutil.rmtree(outPath+'/bestModel/')
-
-    os.makedirs(outPath+'/modelsScores/', exist_ok=True)
-
-    # Model for each pollutant   
-    for pollutant in REFpollutants:
+        covariates = CLEANpollutants
+        polcombs = sum([list(map(list, combinations(covariates, i))) for i in range(len(covariates) + 1)], [])
+         
         all_models=[]
         for combs in polcombs:
             if any(pollutant in s for s in combs):
@@ -113,4 +121,4 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
         df_models.to_csv(outPath+'/modelsScores/modelsScores_'+
                          pollutant+'.csv', index=False)
             
-    return covariates
+    return pollutants
