@@ -25,6 +25,7 @@ class CLEANcalibrationNewDeviceModel (models.Model):
 	REF06 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	REF07 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	REF08 = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
+	outzip = models.FileField(upload_to='calibration', max_length=100,null=True, blank=True)
 	#author = models.ForeignKey(User, on_delete=models.CASCADE)
 	lon = models.FloatField(null=False, blank=False, default=-49.0)
 	lat = models.FloatField(null=False, blank=False, default=-27.0)

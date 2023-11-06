@@ -35,7 +35,7 @@
 		{% csrf_token %}
 		{{ form.deviceId|as_crispy_field }}
 		{{ form.date_posted|as_crispy_field }}
-    	{{ form.CLEAN01|as_crispy_field }}
+<!--     	{{ form.CLEAN01|as_crispy_field }}
     	{{ form.CLEAN02|as_crispy_field }}
     	{{ form.CLEAN03|as_crispy_field }}
     	{{ form.CLEAN04|as_crispy_field }}
@@ -51,7 +51,8 @@
     	{{ form.REF05|as_crispy_field }}
     	{{ form.REF06|as_crispy_field }}
     	{{ form.REF07|as_crispy_field }}
-    	{{ form.REF08|as_crispy_field }}
+    	{{ form.REF08|as_crispy_field }} -->
+    	{{ form.outzip|as_crispy_field }}
  
       	<div class="form-row">
       		<div class="form-group col-md-4 mb-0">

@@ -5,40 +5,19 @@ Created on Thu Oct  5 14:34:39 2023
 
 @author: leohoinaski
 """
-from .REFprepData import mainREFprepData
-from .CLEANprepData import mainCLEANprepData
-from .CLEANstats  import statistics
+from REFprepData import mainREFprepData
+from CLEANprepData import mainCLEANprepData
+from CLEANstats  import statistics
 #from .CLEANfigures import 
 import pandas as pd
-from .CLEANmodel import CLEANbestModel, modelsEvaluation, saveBestModel
+from CLEANmodel import CLEANbestModel, modelsEvaluation, saveBestModel
 from itertools import combinations
 import shutil
 import os
 
-#folder_path = r'C:\Users\rafab\OneDrive\Documentos\CLEAN_Calibration\data\data_clean\dados_brutos'
 
-# PC LAB
-# CLEANfolder_path = '/mnt/sdb1/CLEAN/data/Inputs/CLEAN'
-# Reffolder_path = '/mnt/sdb1/CLEAN/data/Inputs/Reference/diamante'
-# outPath = '/mnt/sdb1/CLEAN/data/Outputs'
-
-# PC CASA
-# Reffolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/Reference/diamante'
-# CLEANfolder_path = '/media/leohoinaski/HDD/CLEAN/data/Inputs/CLEAN'
-# outPath = '/media/leohoinaski/HDD/CLEAN/data/Outputs'
-
-
-# Inputs
-# pollutants=['O3','CO','NO2','SO2']
-# samplePerctg=0.5 # Percentage of data for training 
-# nIteration = 1000 # Number of random samples
-# op = 'raw' # option to data preparing
-# deviceId = '01' # Device Identification
-# sensor ='01'
-
-
-
-def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samplePerctg,nIteration,op):
+def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,
+                         samplePerctg,nIteration,op):
 
 #------------------------------PROCESSING--------------------------------------
     # Directories
@@ -122,3 +101,19 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,samp
                          pollutant+'.csv', index=False)
             
     return pollutants
+
+
+
+
+
+CLEANpollutants=['O3','CO','NO2','SO2']
+REFpollutants=['O3','CO','NO2','SO2']
+samplePerctg=0.5 # Percentage of data for training 
+nIteration = 1000 # Number of random samples
+op = 'raw' # option to data preparing
+deviceId = '01' # Device Identification
+sensor ='01'
+BASE= '/media/leohoinaski/HDD/CLEAN'
+
+mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,
+                          samplePerctg,nIteration,op)

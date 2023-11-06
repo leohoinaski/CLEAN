@@ -56,7 +56,7 @@ def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
     scorei=-100
     models=[]
     for ii,item in enumerate(classifiers):
-        #print(item)
+        print(item)
         model = item
         model.fit(X,y)
         saveAllModels(outPath,pollutant,covariates,deviceId,sensor,model,
