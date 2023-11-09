@@ -18,7 +18,6 @@ def CLEANcalibrationNewDevice (request):
             CLEANcalib = CLEANcalibrationNewDeviceModel.objects.all().last()
             BASE = (os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             deviceId = CLEANcalib.deviceId
-
             RUN_FOLDER = BASE + "/media/calibration/"+ str(deviceId).zfill(2) + "/"
 
             if os.path.isdir(RUN_FOLDER) ==0:
@@ -28,7 +27,6 @@ def CLEANcalibrationNewDevice (request):
 
             # if os.path.isdir(RUN_FOLDER+'Inputs/CLEAN') ==0:
             #     os.makedirs(RUN_FOLDER+'Inputs/CLEAN', exist_ok=True)
-
             # if os.path.isdir(RUN_FOLDER+'Outputs') ==0:
             #     os.makedirs(RUN_FOLDER+'Inputs/Reference', exist_ok=True)
             #     os.makedirs(RUN_FOLDER+'Outputs', exist_ok=True)
@@ -38,7 +36,6 @@ def CLEANcalibrationNewDevice (request):
                 print(CLEANcalib.outzip.path)
                 with zipfile.ZipFile(CLEANcalib.outzip.path, 'r') as zip_ref:
                     zip_ref.extractall(RUN_FOLDER)
-
 
             # if CLEANcalib.CLEAN01:
             #     shutil.copy(CLEANcalib.CLEAN01.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN01.path.split('/')[-1])
@@ -52,7 +49,6 @@ def CLEANcalibrationNewDevice (request):
             #     shutil.copy(CLEANcalib.CLEAN05.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN05.path.split('/')[-1])
             # if CLEANcalib.CLEAN06:
             #     shutil.copy(CLEANcalib.CLEAN06.path,RUN_FOLDER+'Inputs/CLEAN/'+CLEANcalib.CLEAN06.path.split('/')[-1])
-
             # if CLEANcalib.REF01:
             #     shutil.copy(CLEANcalib.REF01.path,RUN_FOLDER+'Inputs/Reference/'+CLEANcalib.REF01.path.split('/')[-1])
             # if CLEANcalib.REF02:
@@ -64,18 +60,13 @@ def CLEANcalibrationNewDevice (request):
             # if CLEANcalib.REF05:
             #     shutil.copy(CLEANcalib.REF05.path,RUN_FOLDER+'Inputs/Reference/'+CLEANcalib.REF05.path.split('/')[-1])
             # if CLEANcalib.REF06:
-            #     shutil.copy(CLEANcalib.REF06.path,RUN_FOLDER+'Inputs/Reference/'+CLEANcalib.REF06.path.split('/')[-1])
-
-            
-            # CLEANpollutants = [f.split('_')[1] for f in os.listdir(RUN_FOLDER+'Inputs/CLEAN/') if os.path.isfile(os.path.join(RUN_FOLDER+'Inputs/CLEAN/', f))]
-            
+            #     shutil.copy(CLEANcalib.REF06.path,RUN_FOLDER+'Inputs/Reference/'+CLEANcalib.REF06.path.split('/')[-1])           
+            # CLEANpollutants = [f.split('_')[1] for f in os.listdir(RUN_FOLDER+'Inputs/CLEAN/') if os.path.isfile(os.path.join(RUN_FOLDER+'Inputs/CLEAN/', f))]     
             # REFpollutants = [f.split('_')[1] for f in os.listdir(RUN_FOLDER+'Inputs/Reference/') if os.path.isfile(os.path.join(RUN_FOLDER+'Inputs/Reference/', f))]
             # refpols =[]
             # for pols in REFpollutants:
             #     refpols.append(pols.split('.')[0])
-
             # print(refpols)
-
             #pollutants = mainCLEANcalibration(BASE,deviceId,CLEANpollutants,refpols,1,50,1000,'raw')
             #asyncio.run(mainCLEANcalibration(BASE,deviceId,CLEANpollutants,refpols,1,50,10,'raw'))
             #print(pollutants)
