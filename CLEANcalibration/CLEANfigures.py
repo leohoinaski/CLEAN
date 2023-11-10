@@ -34,7 +34,6 @@ def plotWindows(windows,timeWindows):
         
 
     fig, ax = plt.subplots()
-    import scipy.stats
     for ii in range(0,winLen):
         ax.plot(timeWindows[ii],windows[ii])
         print(np.isnan(windows[ii]).sum())
