@@ -8,6 +8,8 @@ Created on Thu Oct  5 09:40:28 2023
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from scipy.stats import gaussian_kde
+import scipy.stats
 
 def plotWindows(windows,timeWindows):
     
@@ -32,7 +34,7 @@ def plotWindows(windows,timeWindows):
         
 
     fig, ax = plt.subplots()
-    
+    import scipy.stats
     for ii in range(0,winLen):
         ax.plot(timeWindows[ii],windows[ii])
         print(np.isnan(windows[ii]).sum())
@@ -119,6 +121,63 @@ def scatterModelvsObs(dataModel,model,pollutant):
     ax.set_ylim(0,y.max())
     ax.text(y.max()*0.7,y.max()*0.9,'R2 = '+"{:.3f}".format(model.score(X,y)))
     return preds
+
+def modelScatterplot(dataModel,model,pollutant):
+    #Scatterplots
+    #select range os stations
+    cols = dataModel.columns.values
+    rcol=[]
+    for col in cols:
+        if col.startswith('ref')==False:
+            rcol.append(col)
+    rcol.append('ref_'+pollutant)
+            
+    mergeAll = dataModel[rcol]
+    X = np.array(mergeAll.dropna()[rcol[:-1]])
+    y = np.array(mergeAll.dropna()[rcol[-1]])
+            
+    merge2 = dataModel[[pollutant,'ref_'+pollutant]]
+    #X = np.array(merge2.dropna()[pollutant])
+    #y = np.array(merge2.dropna()['ref_'+pollutant])
+    preds = model.predict(X)
+    fig, ax = plt.subplots(figsize=(4,4))
+    
+    xy = np.vstack([y,preds])
+    xy = xy[:,~np.any(np.isnan(xy), axis=0)]
+    z = gaussian_kde(xy)(xy)
+    #new_df = new_df.iloc[~np.any(np.isnan(xy), axis=0).transpose(),:]
+    ax.scatter(y,preds,c=z,s=15,alpha=.5)
+    
+    ###calculate Spearman correlation using new_df
+    corr, p_value = scipy.stats.spearmanr(preds, y)
+   
+    ###insert text with Spearman correlation
+    ax.annotate('ρ = {:.2f}'.format(corr), 
+            xy=(0.70, 0.9), xycoords='axes fraction', 
+            fontsize=8, ha='left', va='center')
+    
+    
+    ax.set_xlabel('Observation\n'+pollutant,fontsize=9)
+    ax.set_ylabel('Predicted\n'+pollutant,fontsize=9)
+    ax.xaxis.set_tick_params(labelsize=8)
+    ax.yaxis.set_tick_params(labelsize=8)
+    ax.set_xlim([np.min([y,preds]),np.max([y,preds])])
+    ax.set_ylim([np.min([y,preds]),np.max([y,preds])])
+    ax.set_aspect('equal')
+    ax.plot([merge2.min().min(), merge2.max().max()],
+             [merge2.min().min(), merge2.max().max()], 'k-', lw=1,dashes=[2, 2])
+    ax.fill_between(np.linspace(merge2.min().min(),merge2.max().max(),merge2.shape[0]), 
+                    np.linspace(merge2.min().min(),merge2.max().max(),merge2.shape[0])*0.5,
+                    alpha=0.2,facecolor='gray',edgecolor=None)
+    ax.fill_between(np.linspace(merge2.min().min(),merge2.max().max(),merge2.shape[0]),
+                    np.linspace(merge2.max().max(),merge2.max().max(),merge2.shape[0]),
+                    np.linspace(merge2.min().min(),merge2.max().max(),merge2.shape[0])*2,
+                    alpha=0.2,facecolor='gray',edgecolor=None)
+    fig.tight_layout()
+    #ax.set_yscale('log')
+    #ax.set_xscale('log')
+    
+    return fig
 
     
 def histCLEANvsREF(merge):

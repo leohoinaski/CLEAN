@@ -8,7 +8,7 @@ Created on Thu Oct  5 14:34:39 2023
 from REFprepData import mainREFprepData
 from CLEANprepData import mainCLEANprepData
 from CLEANstats  import statistics
-#from .CLEANfigures import 
+import CLEANfigures 
 import pandas as pd
 from CLEANmodel import CLEANbestModel, modelsEvaluation, saveBestModel
 from itertools import combinations
@@ -30,6 +30,7 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,
         shutil.rmtree(outPath+'/bestModel/')
 
     os.makedirs(outPath+'/modelsScores/', exist_ok=True)
+    os.makedirs(outPath+'/figures/', exist_ok=True)
 
     dataModel = pd.DataFrame()
     dataBestModel = pd.DataFrame()
@@ -95,6 +96,13 @@ def mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,
                          '-'.join(combi) +'.csv', index=False)
                 all_models.append(df_models)
                 #CLEANfigures.scatterModelvsObs(dataTest,bestModel,pollutant)
+                fig = CLEANfigures.modelScatterplot(dataTest,bestModel,pollutant)
+                fig.savefig(outPath+'/figures/modelScatterplot_'+
+                                      str(bestModel).split('(')[0]+
+                                      '_id-'+str(deviceId)+
+                                      '_Sensor-'+str(sensor)+
+                                      '_target-'+pollutant+
+                                      '_covariates-'+'-'.join(combi[:-1]) )
                 saveBestModel(outPath,pollutant,combi[:-1],deviceId,sensor,bestModel)
         df_models = pd.concat(all_models).sort_values('score', ascending=False)
         df_models.to_csv(outPath+'/modelsScores/modelsScores_'+
@@ -114,6 +122,8 @@ op = 'raw' # option to data preparing
 deviceId = '01' # Device Identification
 sensor ='01'
 BASE= '/media/leohoinaski/HDD/CLEAN'
+#BASE= '/media/leohoinaski/HDD/CLEAN' 
+BASE = (os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 mainCLEANcalibration(BASE,deviceId,CLEANpollutants,REFpollutants,sensor,
                           samplePerctg,nIteration,op)
