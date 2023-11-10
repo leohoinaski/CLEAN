@@ -11,7 +11,8 @@ import os
 import pandas as pd
 import ismember
 from contextlib import redirect_stdout
-
+from sklearn.metrics import mean_absolute_error,mean_squared_error,accuracy_score
+import scipy.stats
 
 def CLEANbestModel(dataBestModel,pollutant,outPath,deviceId,sensor,covariates):
     from sklearn.tree import DecisionTreeRegressor
@@ -103,12 +104,27 @@ def modelsEvaluation(dataModel,dataBestModel,models,pollutant):
     df_models = pd.DataFrame()   
     df_models['model'] = np.zeros(len(models))
     df_models['score'] = np.zeros(len(models))
+    df_models['bias'] = np.zeros(len(models))
+    df_models['mae'] = np.zeros(len(models))
+    df_models['mse'] = np.zeros(len(models))
+    #df_models['accuracy'] = np.zeros(len(models))
+    df_models['spearman']= np.zeros(len(models))
+    df_models['spearman_pval']= np.zeros(len(models))
     df_models['covariates'] = np.zeros(len(models))
     for ii, model in enumerate(models):
         print(model)
         score = model.score(X,y)
         df_models['model'][ii] = str(model).split('(')[0]
         df_models['score'][ii] = score
+        preds = model.predict(np.array(X))
+        df_models['bias'][ii] = np.nanmean(preds-y)
+        df_models['mae'][ii] = mean_absolute_error(y, preds)
+        df_models['mse'][ii] = mean_squared_error(y, preds)
+        #df_models['accuracy'][ii] = accuracy_score(y, preds)
+        corr, p_value = scipy.stats.spearmanr(y, preds)
+        df_models['spearman'][ii] =corr
+        df_models['spearman_pval'][ii] =p_value
+        
         df_models['covariates'][ii] = '-'.join(rcol[:-1]) 
         print(score)
         if score>scorei:
